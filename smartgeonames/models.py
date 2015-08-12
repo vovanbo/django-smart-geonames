@@ -56,6 +56,8 @@ class GeoNameRecord(TranslatableModel):
     modification_date = models.DateField(_('Modification date'))
     # latitude & longitude
     location = PointField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = _('GeoName')
@@ -104,6 +106,8 @@ class Country(models.Model):
                                  max_length=255, blank=True)
     neighbours = models.ManyToManyField('self', verbose_name=_('Neighbours'),
                                         symmetrical=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = [
@@ -160,6 +164,8 @@ class PostalCode(models.Model):
     # latitude & longitude
     location = PointField()
     accuracy = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = _('Postal code')
