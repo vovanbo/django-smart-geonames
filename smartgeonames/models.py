@@ -54,14 +54,19 @@ class GeoNameRecord(TranslatableModel):
     dem = models.IntegerField(_('Digital elevation model'), blank=True)
     timezone = models.CharField(_('Timezone'), max_length=40, blank=True)
     modification_date = models.DateField(_('Modification date'))
-    # latitude
-    # longitude
+    # latitude & longitude
     location = PointField()
+
+    class Meta:
+        verbose_name = _('GeoName')
+        verbose_name_plural = _('GeoNames')
 
 
 class Continent(GeoNameRecord):
     class Meta:
         proxy = True
+        verbose_name = _('Continent')
+        verbose_name_plural = _('Continents')
 
     objects = ContinentManager()
 
@@ -106,11 +111,15 @@ class Country(models.Model):
             'iso_3166_1_a3',
             'iso_3166_1_numeric'
         ]
+        verbose_name = _('Country')
+        verbose_name_plural = _('Countries')
 
 
 class Region(GeoNameRecord):
     class Meta:
         proxy = True
+        verbose_name = _('Region')
+        verbose_name_plural = _('Regions')
 
     objects = RegionManager()
 
@@ -118,6 +127,8 @@ class Region(GeoNameRecord):
 class City(GeoNameRecord):
     class Meta:
         proxy = True
+        verbose_name = _('City')
+        verbose_name_plural = _('Cities')
 
     objects = CityManager()
 
@@ -131,22 +142,25 @@ class PostalCode(models.Model):
     admin1 = models.OneToOneField(
         'smartgeonames.GeoNameRecord',
         verbose_name=_('GeoName record for the first administrative division'),
-        related_name='state_postal_code',
+        related_name='admin1_postal_code',
         blank=True, null=True
     )
     admin2 = models.OneToOneField(
         'smartgeonames.GeoNameRecord',
         verbose_name=_('GeoName record for the second administrative division'),
-        related_name='county_postal_code',
+        related_name='admin2_postal_code',
         blank=True, null=True
     )
     admin3 = models.OneToOneField(
         'smartgeonames.GeoNameRecord',
         verbose_name=_('GeoName record for the third administrative division'),
-        related_name='community_postal_code',
+        related_name='admin3_postal_code',
         blank=True, null=True
     )
-    # latitude
-    # longitude
+    # latitude & longitude
     location = PointField()
-    # accuracy
+    accuracy = models.PositiveIntegerField()
+
+    class Meta:
+        verbose_name = _('Postal code')
+        verbose_name_plural = _('Postal codes')
