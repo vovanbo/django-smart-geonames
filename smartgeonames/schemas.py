@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import
 from marshmallow import Schema, fields
-from marshmallow.validate import Length
+from marshmallow.validate import Length, Range
 
 
 class GeoNameSchema(Schema):
@@ -154,4 +154,4 @@ class PostalCodeSchema(Schema):
     admin_code3 = fields.String(validate=Length(max=20))
     latitude = fields.Decimal()
     longitude = fields.Decimal()
-    accuracy = fields.Integer()
+    accuracy = fields.Integer(validate=Range(min=1, max=6))
