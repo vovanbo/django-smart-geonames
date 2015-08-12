@@ -44,3 +44,5 @@ docs/_build
 
 .idea/
 .python-version
+data/
+*.sqlite3
