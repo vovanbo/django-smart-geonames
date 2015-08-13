@@ -89,7 +89,12 @@ class Country(models.Model):
                                 verbose_name=_('Capital'),
                                 related_name='capital_of',
                                 blank=True, null=True)
-    area = models.PositiveIntegerField(_('Area (km²)'), blank=True)
+    area = models.DecimalField(
+        _('Area (km²)'),
+        max_digits=15,
+        decimal_places=5,
+        blank=True
+    )
     population = models.BigIntegerField(_('Population'), blank=True)
     continent = models.ForeignKey('smartgeonames.Continent',
                                   verbose_name=_('Continent'),
