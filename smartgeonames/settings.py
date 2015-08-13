@@ -48,11 +48,11 @@ OBJECTS_FILE_PATH = getattr(
 )
 OBJECTS_FILE_LOCAL_PATH = getattr(
     settings, 'SMART_GEONAMES_OBJECTS_FILE_LOCAL_PATH',
-    os.path.join(DATA_DIR, 'dump', 'allCountries.txt')
+    os.path.join(DATA_DIR, 'dump', 'allCountries.zip')
 )
 OBJECTS_SCHEMA = getattr(
     settings, 'SMART_GEONAMES_OBJECTS_SCHEMA',
-    GeoNameSchema()
+    GeoNameSchema
 )
 OBJECTS_CONTINENTS_FILTER = getattr(
     settings, 'SMART_GEONAMES_OBJECTS_CONTINENTS_FILTER',
@@ -96,7 +96,7 @@ TRANSLATIONS_FILE_PATH = getattr(
 )
 TRANSLATIONS_FILE_LOCAL_PATH = getattr(
     settings, 'SMART_GEONAMES_TRANSLATIONS_FILE_LOCAL_PATH',
-    os.path.join(DATA_DIR, 'dump', 'alternateNames.txt')
+    os.path.join(DATA_DIR, 'dump', 'alternateNames.zip')
 )
 TRANSLATIONS_SCHEMA = getattr(
     settings, 'SMART_GEONAMES_TRANSLATIONS_SCHEMA',
@@ -117,7 +117,7 @@ POSTAL_CODES_FILE_PATH = getattr(
 )
 POSTAL_CODES_FILE_LOCAL_PATH = getattr(
     settings, 'SMART_GEONAMES_POSTAL_CODES_FILE_LOCAL_PATH',
-    os.path.join(DATA_DIR, 'zip', 'allCountries.txt')
+    os.path.join(DATA_DIR, 'zip', 'allCountries.zip')
 )
 POSTAL_CODES_SCHEMA = getattr(
     settings, 'SMART_GEONAMES_POSRAL_CODES_SCHEMA',
