@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import sys
+import purl
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -104,3 +106,80 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 SPATIALITE_LIBRARY_PATH = '/usr/local/lib/mod_spatialite.dylib'
+
+
+def create_logging_dict():
+    """
+    Create a logging dict using the passed root for log files
+
+    Note the file handlers don't rotate their files.  This should be handled by
+    logrotate (there is a sample conf file in www/deploy/logrotate.d).
+    """
+    return {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'verbose': {
+                'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            },
+            'simple': {
+                'format': '%(levelname)s %(message)s'
+            },
+        },
+        'filters': {
+            'require_debug_false': {
+                '()': 'django.utils.log.RequireDebugFalse',
+            },
+            'require_debug_true': {
+                '()': 'django.utils.log.RequireDebugTrue',
+            }
+        },
+        'handlers': {
+            'null': {
+                'level': 'DEBUG',
+                'class': 'django.utils.log.NullHandler',
+            },
+            'console': {
+                'level': 'DEBUG',
+                'class': 'logging.StreamHandler',
+                'formatter': 'verbose',
+                'filters': ['require_debug_true'],
+                'stream': sys.stdout,
+            },
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+                'propagate': False,
+            },
+            # Log errors to console only when DEBUG=True but to both file and
+            # admins when DEBUG=False
+            'django.request': {
+                'handlers': ['console'],
+                'level': 'ERROR',
+                'propagate': False,
+            },
+            # Enable this logger to see SQL queries
+            'django.db.backends': {
+                'handlers': ['null'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+            'smartgeonames': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+        }
+    }
+
+
+LOGGING = create_logging_dict()
+
+SMART_GEONAMES_URL = 'http://download.geonames.org'
+SMART_GEONAMES_DATA_DIR = '/Users/bo/Work/webdev/django-smart-geonames/data'
+SMART_GEONAMES_OBJECTS_FILE_PATH = \
+    purl.URL(SMART_GEONAMES_URL).path('/export/dump/CS.zip').as_string()
+SMART_GEONAMES_TRANSLATIONS_FILE_PATH = \
+    purl.URL(SMART_GEONAMES_URL).path('/export/dump/MD.zip').as_string()
