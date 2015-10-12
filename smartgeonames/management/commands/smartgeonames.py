@@ -134,6 +134,7 @@ class Command(BaseCommand):
 
     def download(self, remote, local):
         # TODO: Indexing file for fast calculation of difference or use diff.
+        # See: mmh3, binascii, difflib
         self.mkdir(local)
 
         r = requests.get(remote, stream=True)
@@ -240,6 +241,7 @@ class Command(BaseCommand):
                     clean_row = {k: v or None for k, v in row.iteritems()}
                     row_result = schema.load(clean_row)
                     counter += 1
+                    # TODO: Make handlers for each file type
                     print('{0}'.format(counter), end='\r')
                     if row_result.errors:
                         errors += 1
