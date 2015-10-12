@@ -1,7 +1,7 @@
-Django>=1.8.3
-django-parler==1.5
-marshmallow==2.0.0b4
+Django>=1.8.5,<1.9
+django-parler==1.5.1
+marshmallow==2.1.1
 purl==1.1
-    six==1.9.0
-requests==2.7.0
-wheel==0.24.0
+    six==1.10.0
+requests==2.8.0
+wheel==0.26.0
