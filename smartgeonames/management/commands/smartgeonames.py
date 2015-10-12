@@ -114,9 +114,9 @@ class Command(BaseCommand):
 
         if options.get('import'):
             logger.info('IMPORT')
-            # self.parse(COUNTRIES_FILE_LOCAL_PATH, CountryInfoSchema())
-            # self.parse(OBJECTS_FILE_LOCAL_PATH, GeoNameSchema())
-            # self.parse(TRANSLATIONS_FILE_LOCAL_PATH, AlternateNameSchema())
+            # self.parse(COUNTRIES_FILE_LOCAL_PATH, CountryInfoSchema)
+            # self.parse(OBJECTS_FILE_LOCAL_PATH, GeoNameSchema)
+            # self.parse(TRANSLATIONS_FILE_LOCAL_PATH, AlternateNameSchema)
             self.parse(POSTAL_CODES_FILE_LOCAL_PATH, PostalCodeSchema)
 
     def mkdir(self, path):
@@ -219,11 +219,12 @@ class Command(BaseCommand):
                 is_updated = True
         return is_updated
 
-    def parse(self, filepath, schema):
+    def parse(self, filepath, schema_class):
         if os.path.exists(filepath):
-            filename, ext = os.path.splitext(os.path.basename(filepath))
+            schema = schema_class()
             with open(filepath) as csvfile:
                 data = csvfile
+                filename, ext = os.path.splitext(os.path.basename(filepath))
                 if ext.lower() == '.zip':
                     zfile = zipfile.ZipFile(csvfile)
                     file_in_zip = '.'.join([filename, 'txt'])
