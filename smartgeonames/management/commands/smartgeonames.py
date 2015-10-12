@@ -133,6 +133,7 @@ class Command(BaseCommand):
         logger.info('Created folder %s', path)
 
     def download(self, remote, local):
+        # TODO: Indexing file for fast calculation of difference or use diff.
         self.mkdir(local)
 
         r = requests.get(remote, stream=True)
