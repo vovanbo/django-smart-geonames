@@ -4,12 +4,13 @@ import logging
 import os
 import shutil
 import zipfile
-from django.core.management import BaseCommand
 import errno
 import requests
 import time
 import csv
 from six import StringIO
+
+from django.core.management import BaseCommand
 from smartgeonames import settings
 
 DATA_DIR = settings.DATA_DIR
@@ -34,6 +35,8 @@ POSTAL_CODES_FILE_LOCAL_PATH = settings.POSTAL_CODES_FILE_LOCAL_PATH
 POSTAL_CODES_FILTER = settings.POSTAL_CODES_FILTER
 PostalCodeSchema = settings.POSTAL_CODES_SCHEMA
 
+logger = logging.getLogger("smartgeonames")
+
 
 class GeoNamesDialect(csv.Dialect):
     delimiter = str('\t')
@@ -54,7 +57,6 @@ def comment_stripper(iterator):
 
 class Command(BaseCommand):
     help = 'Smart GeoNames manager'
-    logger = logging.getLogger("smartgeonames")
     progress_width = 50
     status_file = os.path.join(DATA_DIR, 'status.csv')
     status_fields = [
@@ -86,34 +88,36 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options.get('clean_up'):
-            print('\nCLEAN-UP\n')
+            logger.info('CLEAN-UP')
             try:
                 shutil.rmtree(DATA_DIR)
-            except os.error as e:
-                print('Nothing to delete! No such directory', DATA_DIR)
+            except os.error:
+                logger.error('Nothing to delete! No such directory %s',
+                             DATA_DIR)
             else:
-                print(DATA_DIR, 'is removed.')
+                logger.warn('%s is removed.', DATA_DIR)
 
             try:
                 os.remove(self.status_file)
-            except os.error as e:
-                print('Nothing to delete! No such file', self.status_file)
+            except os.error:
+                logger.error('Nothing to delete! No such file %s',
+                             self.status_file)
             else:
-                print(self.status_file, 'is removed.')
+                logger.warn('%s is removed.', self.status_file)
 
         if options.get('download'):
-            print('\nDOWNLOAD\n')
+            logger.info('DOWNLOAD')
             self.download(COUNTRIES_FILE_PATH, COUNTRIES_FILE_LOCAL_PATH)
             self.download(OBJECTS_FILE_PATH, OBJECTS_FILE_LOCAL_PATH)
             self.download(TRANSLATIONS_FILE_PATH, TRANSLATIONS_FILE_LOCAL_PATH)
             self.download(POSTAL_CODES_FILE_PATH, POSTAL_CODES_FILE_LOCAL_PATH)
 
         if options.get('import'):
-            print('\nIMPORT\n')
+            logger.info('IMPORT')
             # self.parse(COUNTRIES_FILE_LOCAL_PATH, CountryInfoSchema())
             # self.parse(OBJECTS_FILE_LOCAL_PATH, GeoNameSchema())
             # self.parse(TRANSLATIONS_FILE_LOCAL_PATH, AlternateNameSchema())
-            self.parse(POSTAL_CODES_FILE_LOCAL_PATH, PostalCodeSchema())
+            self.parse(POSTAL_CODES_FILE_LOCAL_PATH, PostalCodeSchema)
 
     def mkdir(self, path):
         path, _ = os.path.split(path)  # get only path to file
@@ -126,7 +130,7 @@ class Command(BaseCommand):
                 pass
             else:
                 raise
-        print('Created folder', path)
+        logger.info('Created folder %s', path)
 
     def download(self, remote, local):
         self.mkdir(local)
@@ -139,10 +143,12 @@ class Command(BaseCommand):
             etag = r.headers.get('etag')
             is_updated = self.check_status(remote, local, etag)
             if is_updated:
-                print('File {0} is up-to-date (Etag: {1}).'.format(local, etag))
+                logger.info(
+                    'File {0} is up-to-date (Etag: {1}).'.format(local, etag))
                 return
             else:
-                print('File {0} is outdated. Needs to update now.'.format(local))
+                logger.info(
+                    'File {0} is outdated. Needs to update now.'.format(local))
 
         print('Download of {0} in progress\n'
               'Size: {1} bytes\n'.format(remote, total_length))
