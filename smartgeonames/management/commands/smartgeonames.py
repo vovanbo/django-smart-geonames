@@ -150,8 +150,13 @@ class Command(BaseCommand):
                 logger.info(
                     'File {0} is outdated. Needs to update now.'.format(local))
 
-        print('Download of {0} in progress\n'
-              'Size: {1} bytes\n'.format(remote, total_length))
+            backup = local + '.bak'
+            logger.info(
+                'Create backup of existing local file to {0}'.format(backup))
+            shutil.copy2(local, backup)
+
+        logger.info('Download of {0} in progress\n'
+                    'Size: {1} bytes\n'.format(remote, total_length))
 
         with open(local, 'wb') as f:
             start = time.clock()
