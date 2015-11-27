@@ -4,6 +4,7 @@ from django.contrib.gis.db.models import PointField
 from django.db import models
 
 from django.utils.translation import ugettext_lazy as _
+from django_extensions.db.models import TimeStampedModel
 from parler.models import TranslatableModel, TranslatedFields
 
 from .managers import ContinentManager, CityManager, RegionManager
@@ -19,7 +20,7 @@ CONTINENT_CHOICES = (
 )
 
 
-class GeoNameRecord(TranslatableModel):
+class GeoNameRecord(TimeStampedModel, TranslatableModel):
     id = models.IntegerField(_('GeoName ID'), primary_key=True)
     translations = TranslatedFields(
         name=models.CharField(_('Name'), max_length=255),
@@ -56,8 +57,6 @@ class GeoNameRecord(TranslatableModel):
     modification_date = models.DateField(_('Modification date'))
     # latitude & longitude
     location = PointField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = _('GeoName')
@@ -73,7 +72,7 @@ class Continent(GeoNameRecord):
     objects = ContinentManager()
 
 
-class Country(models.Model):
+class Country(TimeStampedModel, models.Model):
     iso_3166_1_a2 = models.CharField(_('ISO 3166-1 alpha-2'), max_length=2,
                                      primary_key=True)
     iso_3166_1_a3 = models.CharField(_('ISO 3166-1 alpha-3'), max_length=3,
@@ -111,8 +110,6 @@ class Country(models.Model):
                                  max_length=255, blank=True)
     neighbours = models.ManyToManyField('self', verbose_name=_('Neighbours'),
                                         symmetrical=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = [
@@ -142,7 +139,7 @@ class City(GeoNameRecord):
     objects = CityManager()
 
 
-class PostalCode(models.Model):
+class PostalCode(TimeStampedModel, models.Model):
     country = models.ForeignKey('smartgeonames.Country',
                                 related_name='postal_codes',
                                 verbose_name=_('Country'))
@@ -169,8 +166,6 @@ class PostalCode(models.Model):
     # latitude & longitude
     location = PointField()
     accuracy = models.PositiveIntegerField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = _('Postal code')

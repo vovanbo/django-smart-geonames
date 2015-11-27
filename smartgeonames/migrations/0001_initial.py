@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 import django.contrib.gis.db.models.fields
+import django_extensions.db.fields
 
 
 class Migration(migrations.Migration):
@@ -14,11 +15,13 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Country',
             fields=[
+                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
+                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('iso_3166_1_a2', models.CharField(max_length=2, serialize=False, verbose_name='ISO 3166-1 alpha-2', primary_key=True)),
                 ('iso_3166_1_a3', models.CharField(unique=True, max_length=3, verbose_name='ISO 3166-1 alpha-3')),
                 ('iso_3166_1_numeric', models.CharField(unique=True, max_length=3, verbose_name='ISO 3166-1 numeric')),
                 ('fips', models.CharField(max_length=2, verbose_name='FIPS', blank=True)),
-                ('area', models.PositiveIntegerField(verbose_name='Area (km\xb2)', blank=True)),
+                ('area', models.DecimalField(verbose_name='Area (km\xb2)', max_digits=15, decimal_places=5, blank=True)),
                 ('population', models.BigIntegerField(verbose_name='Population', blank=True)),
                 ('tld', models.CharField(max_length=2, verbose_name='Top-level domain', blank=True)),
                 ('currency_code', models.CharField(db_index=True, max_length=3, verbose_name='Currency code', blank=True)),
@@ -34,6 +37,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='GeoNameRecord',
             fields=[
+                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
+                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('id', models.IntegerField(serialize=False, verbose_name='GeoName ID', primary_key=True)),
                 ('name_ascii', models.CharField(max_length=255, verbose_name='Name in ASCII')),
                 ('alt_names', models.TextField(max_length=10000, verbose_name='Alternate names')),
@@ -76,6 +81,8 @@ class Migration(migrations.Migration):
             name='PostalCode',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
+                ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
                 ('code', models.CharField(max_length=20, verbose_name='Postal code', db_index=True)),
                 ('place_name', models.CharField(max_length=180, verbose_name='Place name')),
                 ('location', django.contrib.gis.db.models.fields.PointField(srid=4326)),
@@ -98,7 +105,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='country',
             name='neighbours',
-            field=models.ManyToManyField(related_name='neighbours_rel_+', verbose_name='Neighbours', to='smartgeonames.Country', blank=True),
+            field=models.ManyToManyField(related_name='_country_neighbours_+', verbose_name='Neighbours', to='smartgeonames.Country', blank=True),
         ),
         migrations.CreateModel(
             name='City',
