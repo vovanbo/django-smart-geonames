@@ -133,8 +133,6 @@ class Command(BaseCommand):
         logger.info('Created folder %s', path)
 
     def download(self, remote, local):
-        # TODO: Indexing file for fast calculation of difference or use diff.
-        # See: mmh3, binascii, difflib
         self.mkdir(local)
 
         r = requests.get(remote, stream=True)
@@ -143,22 +141,23 @@ class Command(BaseCommand):
 
         if os.path.exists(local):
             etag = r.headers.get('etag')
-            is_updated = self.check_status(remote, local, etag)
+            is_updated = self.is_file_updated(remote, local, etag)
             if is_updated:
                 logger.info(
-                    'File {0} is up-to-date (Etag: {1}).'.format(local, etag))
+                    'File %s is up-to-date (Etag: %s).', local, etag)
                 return
             else:
                 logger.info(
-                    'File {0} is outdated. Needs to update now.'.format(local))
+                    'File %s is outdated. Needs to update now.', local)
 
             backup = local + '.bak'
             logger.info(
-                'Create backup of existing local file to {0}'.format(backup))
+                'Create backup of existing local file to %s', backup)
             shutil.copy2(local, backup)
 
-        logger.info('Download of {0} in progress\n'
-                    'Size: {1} bytes\n'.format(remote, total_length))
+        logger.info('Download of %s in progress\n'
+                    'Size: %s bytes\n',
+                    remote, total_length)
 
         with open(local, 'wb') as f:
             start = time.clock()
@@ -196,7 +195,7 @@ class Command(BaseCommand):
             writer = csv.DictWriter(csvfile, fieldnames=self.status_fields)
             writer.writeheader()
             if not status:
-                status = [update,]
+                status = [update, ]
             else:
                 status = [f for f in status if f['remote'] != update['remote']]
                 status.append(update)
@@ -211,7 +210,7 @@ class Command(BaseCommand):
                 result = [r for r in reader][1:]  # ignore first row (header)
         return result
 
-    def check_status(self, remote, local, etag):
+    def is_file_updated(self, remote, local, etag):
         status = self.get_status()
         is_updated = False
         for row in status:
@@ -223,7 +222,6 @@ class Command(BaseCommand):
 
     def parse(self, filepath, schema_class):
         if os.path.exists(filepath):
-            schema = schema_class()
             with open(filepath) as csvfile:
                 data = csvfile
                 filename, ext = os.path.splitext(os.path.basename(filepath))
@@ -231,6 +229,7 @@ class Command(BaseCommand):
                     zfile = zipfile.ZipFile(csvfile)
                     file_in_zip = '.'.join([filename, 'txt'])
                     data = StringIO(zfile.read(file_in_zip))
+                schema = schema_class()
                 reader = csv.DictReader(comment_stripper(data),
                                         dialect=GeoNamesDialect(),
                                         fieldnames=schema.fields.keys())
