@@ -1,0 +1,6 @@
+-r requirements.in
+coverage
+coveralls
+mock
+flake8
+tox
