@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Country',
+            name='CountryInfo',
             fields=[
                 ('created', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='created')),
                 ('modified', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='modified')),
@@ -28,6 +28,7 @@ class Migration(migrations.Migration):
                 ('postal_code_format', models.CharField(max_length=255, verbose_name='Postal code format', blank=True)),
                 ('postal_code_regex', models.CharField(max_length=255, verbose_name='Postal code regular expression', blank=True)),
                 ('languages', models.CharField(max_length=255, verbose_name='List of languages spoken in a country', blank=True)),
+                ('neighbours', models.ManyToManyField(related_name='_countryinfo_neighbours_+', verbose_name='Neighbours', to='smartgeonames.CountryInfo', blank=True)),
             ],
             options={
                 'verbose_name': 'Country',
@@ -54,7 +55,6 @@ class Migration(migrations.Migration):
                 ('timezone', models.CharField(max_length=40, verbose_name='Timezone', blank=True)),
                 ('modification_date', models.DateField(verbose_name='Modification date')),
                 ('location', django.contrib.gis.db.models.fields.PointField(srid=4326)),
-                ('country', models.ForeignKey(related_name='geo_names', verbose_name='Country', blank=True, to='smartgeonames.Country', null=True)),
             ],
             options={
                 'verbose_name': 'GeoName',
@@ -90,22 +90,11 @@ class Migration(migrations.Migration):
                 ('admin1', models.OneToOneField(related_name='admin1_postal_code', null=True, blank=True, to='smartgeonames.GeoNameRecord', verbose_name='GeoName record for the first administrative division')),
                 ('admin2', models.OneToOneField(related_name='admin2_postal_code', null=True, blank=True, to='smartgeonames.GeoNameRecord', verbose_name='GeoName record for the second administrative division')),
                 ('admin3', models.OneToOneField(related_name='admin3_postal_code', null=True, blank=True, to='smartgeonames.GeoNameRecord', verbose_name='GeoName record for the third administrative division')),
-                ('country', models.ForeignKey(related_name='postal_codes', verbose_name='Country', to='smartgeonames.Country')),
             ],
             options={
                 'verbose_name': 'Postal code',
                 'verbose_name_plural': 'Postal codes',
             },
-        ),
-        migrations.AddField(
-            model_name='country',
-            name='geo_name',
-            field=models.OneToOneField(related_name='country_object', null=True, blank=True, to='smartgeonames.GeoNameRecord', verbose_name='GeoName record'),
-        ),
-        migrations.AddField(
-            model_name='country',
-            name='neighbours',
-            field=models.ManyToManyField(related_name='_country_neighbours_+', verbose_name='Neighbours', to='smartgeonames.Country', blank=True),
         ),
         migrations.CreateModel(
             name='City',
@@ -130,6 +119,17 @@ class Migration(migrations.Migration):
             bases=('smartgeonames.geonamerecord',),
         ),
         migrations.CreateModel(
+            name='Country',
+            fields=[
+            ],
+            options={
+                'verbose_name': 'Country',
+                'proxy': True,
+                'verbose_name_plural': 'Countries',
+            },
+            bases=('smartgeonames.geonamerecord',),
+        ),
+        migrations.CreateModel(
             name='Region',
             fields=[
             ],
@@ -140,22 +140,37 @@ class Migration(migrations.Migration):
             },
             bases=('smartgeonames.geonamerecord',),
         ),
+        migrations.AddField(
+            model_name='postalcode',
+            name='country',
+            field=models.ForeignKey(related_name='postal_codes', verbose_name='Country', to='smartgeonames.Country'),
+        ),
         migrations.AlterUniqueTogether(
             name='geonamerecordtranslation',
             unique_together=set([('language_code', 'master')]),
         ),
         migrations.AddField(
-            model_name='country',
+            model_name='geonamerecord',
+            name='country',
+            field=models.ForeignKey(related_name='geo_names', verbose_name='Country', blank=True, to='smartgeonames.Country', null=True),
+        ),
+        migrations.AddField(
+            model_name='countryinfo',
             name='capital',
             field=models.ForeignKey(related_name='capital_of', verbose_name='Capital', blank=True, to='smartgeonames.City', null=True),
         ),
         migrations.AddField(
-            model_name='country',
+            model_name='countryinfo',
             name='continent',
             field=models.ForeignKey(related_name='countries', verbose_name='Continent', blank=True, to='smartgeonames.Continent', null=True),
         ),
-        migrations.AlterUniqueTogether(
+        migrations.AddField(
+            model_name='countryinfo',
             name='country',
+            field=models.OneToOneField(related_name='country_info', null=True, blank=True, to='smartgeonames.Country', verbose_name='GeoNames country record'),
+        ),
+        migrations.AlterUniqueTogether(
+            name='countryinfo',
             unique_together=set([('iso_3166_1_a2', 'iso_3166_1_a3', 'iso_3166_1_numeric')]),
         ),
     ]

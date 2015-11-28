@@ -7,7 +7,8 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from parler.models import TranslatableModel, TranslatedFields
 
-from .managers import ContinentManager, CityManager, RegionManager
+from .managers import ContinentManager, CountryManager, RegionManager, \
+    CityManager
 
 CONTINENT_CHOICES = (
     ('AF', _('Africa')),
@@ -36,20 +37,16 @@ class GeoNameRecord(TimeStampedModel, TranslatableModel):
                                 blank=True, null=True)
     admin1_code = models.CharField(
         _('Code for the first administrative division'), max_length=20,
-        blank=True
-    )
+        blank=True)
     admin2_code = models.CharField(
         _('Code for the second administrative division'), max_length=80,
-        blank=True
-    )
+        blank=True)
     admin3_code = models.CharField(
         _('Code for the third administrative division'), max_length=20,
-        blank=True
-    )
+        blank=True)
     admin4_code = models.CharField(
         _('Code for the fourth administrative division'), max_length=20,
-        blank=True
-    )
+        blank=True)
     population = models.BigIntegerField(_('Population'), blank=True)
     elevation = models.IntegerField(_('Elevation'), blank=True)
     dem = models.IntegerField(_('Digital elevation model'), blank=True)
@@ -72,7 +69,34 @@ class Continent(GeoNameRecord):
     objects = ContinentManager()
 
 
-class Country(TimeStampedModel, models.Model):
+class Country(GeoNameRecord):
+    class Meta:
+        proxy = True
+        verbose_name = _('Country')
+        verbose_name_plural = _('Countries')
+
+    objects = CountryManager()
+
+
+class Region(GeoNameRecord):
+    class Meta:
+        proxy = True
+        verbose_name = _('Region')
+        verbose_name_plural = _('Regions')
+
+    objects = RegionManager()
+
+
+class City(GeoNameRecord):
+    class Meta:
+        proxy = True
+        verbose_name = _('City')
+        verbose_name_plural = _('Cities')
+
+    objects = CityManager()
+
+
+class CountryInfo(TimeStampedModel, models.Model):
     iso_3166_1_a2 = models.CharField(_('ISO 3166-1 alpha-2'), max_length=2,
                                      primary_key=True)
     iso_3166_1_a3 = models.CharField(_('ISO 3166-1 alpha-3'), max_length=3,
@@ -80,9 +104,9 @@ class Country(TimeStampedModel, models.Model):
     iso_3166_1_numeric = models.CharField(_('ISO 3166-1 numeric'), max_length=3,
                                           unique=True)
     fips = models.CharField(_('FIPS'), max_length=2, blank=True)
-    geo_name = models.OneToOneField('smartgeonames.GeoNameRecord',
-                                    verbose_name=_('GeoName record'),
-                                    related_name='country_object',
+    country = models.OneToOneField('smartgeonames.Country',
+                                    verbose_name=_('GeoNames country record'),
+                                    related_name='country_info',
                                     blank=True, null=True)
     capital = models.ForeignKey('smartgeonames.City',
                                 verbose_name=_('Capital'),
@@ -119,24 +143,6 @@ class Country(TimeStampedModel, models.Model):
         ]
         verbose_name = _('Country')
         verbose_name_plural = _('Countries')
-
-
-class Region(GeoNameRecord):
-    class Meta:
-        proxy = True
-        verbose_name = _('Region')
-        verbose_name_plural = _('Regions')
-
-    objects = RegionManager()
-
-
-class City(GeoNameRecord):
-    class Meta:
-        proxy = True
-        verbose_name = _('City')
-        verbose_name_plural = _('Cities')
-
-    objects = CityManager()
 
 
 class PostalCode(TimeStampedModel, models.Model):
