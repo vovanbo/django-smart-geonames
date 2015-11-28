@@ -1,4 +1,5 @@
 -r requirements.in
+pysqlite
 coverage
 coveralls
 mock
