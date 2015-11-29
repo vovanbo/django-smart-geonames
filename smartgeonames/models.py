@@ -6,6 +6,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from parler.models import TranslatableModel, TranslatedFields
+from treebeard.mp_tree import MP_Node
 
 from .managers import ContinentManager, CountryManager, RegionManager, \
     CityManager
@@ -21,8 +22,8 @@ CONTINENT_CHOICES = (
 )
 
 
-class GeoNameRecord(TimeStampedModel, TranslatableModel):
-    id = models.IntegerField(_('GeoName ID'), primary_key=True)
+class GeoNamesRecord(TimeStampedModel, TranslatableModel, MP_Node):
+    id = models.IntegerField(_('GeoNames ID'), primary_key=True)
     translations = TranslatedFields(
         name=models.CharField(_('Name'), max_length=255),
     )
@@ -31,10 +32,10 @@ class GeoNameRecord(TimeStampedModel, TranslatableModel):
     feature_class = models.CharField(_('Feature class'), max_length=1)
     feature_code = models.CharField(_('Feature code'), max_length=10,
                                     db_index=True)
-    country = models.ForeignKey('smartgeonames.Country',
-                                verbose_name=_('Country'),
-                                related_name='geo_names',
-                                blank=True, null=True)
+    country_info = models.ForeignKey('smartgeonames.CountryInfo',
+                                     verbose_name=_('Country info'),
+                                     related_name='geo_names',
+                                     blank=True, null=True)
     admin1_code = models.CharField(
         _('Code for the first administrative division'), max_length=20,
         blank=True)
@@ -56,11 +57,11 @@ class GeoNameRecord(TimeStampedModel, TranslatableModel):
     location = PointField()
 
     class Meta:
-        verbose_name = _('GeoName')
-        verbose_name_plural = _('GeoNames')
+        verbose_name = _('GeoNames record')
+        verbose_name_plural = _('GeoNames records')
 
 
-class Continent(GeoNameRecord):
+class Continent(GeoNamesRecord):
     class Meta:
         proxy = True
         verbose_name = _('Continent')
@@ -69,7 +70,7 @@ class Continent(GeoNameRecord):
     objects = ContinentManager()
 
 
-class Country(GeoNameRecord):
+class Country(GeoNamesRecord):
     class Meta:
         proxy = True
         verbose_name = _('Country')
@@ -78,7 +79,7 @@ class Country(GeoNameRecord):
     objects = CountryManager()
 
 
-class Region(GeoNameRecord):
+class Region(GeoNamesRecord):
     class Meta:
         proxy = True
         verbose_name = _('Region')
@@ -87,7 +88,7 @@ class Region(GeoNameRecord):
     objects = RegionManager()
 
 
-class City(GeoNameRecord):
+class City(GeoNamesRecord):
     class Meta:
         proxy = True
         verbose_name = _('City')
@@ -105,9 +106,9 @@ class CountryInfo(TimeStampedModel, models.Model):
                                           unique=True)
     fips = models.CharField(_('FIPS'), max_length=2, blank=True)
     country = models.OneToOneField('smartgeonames.Country',
-                                    verbose_name=_('GeoNames country record'),
-                                    related_name='country_info',
-                                    blank=True, null=True)
+                                   verbose_name=_('GeoNames country record'),
+                                   related_name='info',
+                                   blank=True, null=True)
     capital = models.ForeignKey('smartgeonames.City',
                                 verbose_name=_('Capital'),
                                 related_name='capital_of',
@@ -116,8 +117,7 @@ class CountryInfo(TimeStampedModel, models.Model):
         _('Area (km²)'),
         max_digits=15,
         decimal_places=5,
-        blank=True
-    )
+        blank=True)
     population = models.BigIntegerField(_('Population'), blank=True)
     continent = models.ForeignKey('smartgeonames.Continent',
                                   verbose_name=_('Continent'),
@@ -132,7 +132,8 @@ class CountryInfo(TimeStampedModel, models.Model):
                                          max_length=255, blank=True)
     languages = models.CharField(_('List of languages spoken in a country'),
                                  max_length=255, blank=True)
-    neighbours = models.ManyToManyField('self', verbose_name=_('Neighbours'),
+    neighbours = models.ManyToManyField('smartgeonames.Country',
+                                        verbose_name=_('Neighbours'),
                                         symmetrical=True, blank=True)
 
     class Meta:
@@ -141,8 +142,8 @@ class CountryInfo(TimeStampedModel, models.Model):
             'iso_3166_1_a3',
             'iso_3166_1_numeric'
         ]
-        verbose_name = _('Country')
-        verbose_name_plural = _('Countries')
+        verbose_name = _('Country info')
+        verbose_name_plural = _('Countries info')
 
 
 class PostalCode(TimeStampedModel, models.Model):
@@ -152,23 +153,20 @@ class PostalCode(TimeStampedModel, models.Model):
     code = models.CharField(_('Postal code'), max_length=20, db_index=True)
     place_name = models.CharField(_('Place name'), max_length=180)
     admin1 = models.OneToOneField(
-        'smartgeonames.GeoNameRecord',
-        verbose_name=_('GeoName record for the first administrative division'),
+        'smartgeonames.GeoNamesRecord',
+        verbose_name=_('GeoNames record for the first administrative division'),
         related_name='admin1_postal_code',
-        blank=True, null=True
-    )
+        blank=True, null=True)
     admin2 = models.OneToOneField(
-        'smartgeonames.GeoNameRecord',
-        verbose_name=_('GeoName record for the second administrative division'),
+        'smartgeonames.GeoNamesRecord',
+        verbose_name=_('GeoNames record for the second administrative division'),
         related_name='admin2_postal_code',
-        blank=True, null=True
-    )
+        blank=True, null=True)
     admin3 = models.OneToOneField(
-        'smartgeonames.GeoNameRecord',
-        verbose_name=_('GeoName record for the third administrative division'),
+        'smartgeonames.GeoNamesRecord',
+        verbose_name=_('GeoNames record for the third administrative division'),
         related_name='admin3_postal_code',
-        blank=True, null=True
-    )
+        blank=True, null=True)
     # latitude & longitude
     location = PointField()
     accuracy = models.PositiveIntegerField()
