@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, absolute_import
-from marshmallow import Schema, fields
+from __future__ import unicode_literals, absolute_import, print_function
+from marshmallow import Schema, fields, pre_load
 from marshmallow.validate import Length, Range
 
 
-class GeoNameSchema(Schema):
+class SmartGeoNamesBaseSchema(Schema):
+    @pre_load
+    def clean_up(self, in_data):
+        in_data = {k: v or None for k, v in in_data.iteritems()}
+        return in_data
+
+
+class GeoNameSchema(SmartGeoNamesBaseSchema):
     """
     geonameid         : integer id of record in geonames database
     name              : name of geographical point (utf8) varchar(200)
@@ -64,7 +71,7 @@ class GeoNameSchema(Schema):
     modification_date = fields.Date()
 
 
-class AlternateNameSchema(Schema):
+class AlternateNameSchema(SmartGeoNamesBaseSchema):
     """
     alternateNameId   : the id of this alternate name, int
     geonameid         : geonameId referring to id in table 'geoname', int
@@ -99,7 +106,7 @@ class AlternateNameSchema(Schema):
     isHistoric = fields.Boolean(allow_none=True)
 
 
-class CountryInfoSchema(Schema):
+class CountryInfoSchema(SmartGeoNamesBaseSchema):
     class Meta:
         ordered = True
 
@@ -126,7 +133,7 @@ class CountryInfoSchema(Schema):
     equivalent_fips_code = fields.String(allow_none=True)
 
 
-class PostalCodeSchema(Schema):
+class PostalCodeSchema(SmartGeoNamesBaseSchema):
     """
     country code      : iso country code, 2 characters
     postal code       : varchar(20)
@@ -156,3 +163,6 @@ class PostalCodeSchema(Schema):
     latitude = fields.Decimal()
     longitude = fields.Decimal()
     accuracy = fields.Integer(validate=Range(min=1, max=6), allow_none=True)
+
+    # def handle_error(self, error, data):
+    #     print(data)
