@@ -2,6 +2,7 @@ Django<1.9
 django-treebeard
 django-parler
 django-extensions
+pandas
 marshmallow
 purl
 requests
