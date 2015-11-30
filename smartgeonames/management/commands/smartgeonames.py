@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals, print_function
+
 import logging
 import os
 import shutil
 import zipfile
 import errno
+
+import pandas
 import requests
 import time
 import csv
 from six import StringIO
-
 from django.core.management import BaseCommand
 from smartgeonames import settings
 
@@ -48,7 +50,7 @@ class GeoNamesDialect(csv.Dialect):
 
 def comment_stripper(iterator):
     for line in iterator:
-        if line [:1] == '#':
+        if line[:1] == '#':
             continue
         if not line.strip():
             continue
@@ -67,6 +69,8 @@ class Command(BaseCommand):
         'last_modified',
         'date',
     ]
+    memory_mode = None
+    without_pandas_mode = None
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -76,14 +80,25 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '-d', '--download', action='store_true', dest='download',
-            default=True,
-            help='Download GeoNames data (default: true)'
+            default=False,
+            help='Download GeoNames data (default: false)'
         )
         parser.add_argument(
             '--clean-up', action='store_true', dest='clean_up',
             default=False,
             help='Clean-up downloaded files and '
                  'reset status file (default: false)'
+        )
+        parser.add_argument(
+            '--memory-mode', dest='memory_mode',
+            choices=['low', 'normal', 'max'],
+            default='normal',
+            help='Memory mode (default: normal)'
+        )
+        parser.add_argument(
+            '--without-pandas', action='store_true', dest='without_pandas_mode',
+            default=False,
+            help='Don\'t use Pandas package for CSV parsing (default: false)'
         )
 
     def handle(self, *args, **options):
@@ -113,11 +128,34 @@ class Command(BaseCommand):
             self.download(POSTAL_CODES_FILE_PATH, POSTAL_CODES_FILE_LOCAL_PATH)
 
         if options.get('import'):
-            logger.info('IMPORT')
+            self.memory_mode = options.get('memory_mode')
+            self.without_pandas_mode = options.get('without_pandas_mode')
+            logger.info('IMPORT (memory mode: %s, use Pandas: %s)',
+                        self.memory_mode, not self.without_pandas_mode)
             # self.parse(COUNTRIES_FILE_LOCAL_PATH, CountryInfoSchema)
             # self.parse(OBJECTS_FILE_LOCAL_PATH, GeoNameSchema)
             # self.parse(TRANSLATIONS_FILE_LOCAL_PATH, AlternateNameSchema)
-            self.parse(POSTAL_CODES_FILE_LOCAL_PATH, PostalCodeSchema)
+            data = self.parse(POSTAL_CODES_FILE_LOCAL_PATH, PostalCodeSchema)
+            counter = 0
+            errors = 0
+            for row in data:
+                counter += 1
+                if row.errors:
+                    errors += 1
+                    print(counter)
+                # TODO: Make handlers for each file type
+                self.postal_code_handler(row)
+            print('Total records:', counter)
+            print('Records with errors:', errors)
+
+    def postal_code_handler(self, postal_code):
+        # print('{0}'.format(counter), end='\r')
+        if postal_code.errors:
+            # print(row)
+            # print(counter, 'ERROR', row_result.errors)
+            # print(counter, ', '.join(
+            #     [f for f, m in row.errors.iteritems()]))
+            print(postal_code)
 
     def mkdir(self, path):
         path, _ = os.path.split(path)  # get only path to file
@@ -129,6 +167,7 @@ class Command(BaseCommand):
             if e.errno == errno.EEXIST and os.path.isdir(path):
                 pass
             else:
+                logger.error('Folder %s can\'t be created.', path)
                 raise
         logger.info('Created folder %s', path)
 
@@ -222,31 +261,69 @@ class Command(BaseCommand):
 
     def parse(self, filepath, schema_class):
         if os.path.exists(filepath):
-            with open(filepath) as csvfile:
-                data = csvfile
-                filename, ext = os.path.splitext(os.path.basename(filepath))
-                if ext.lower() == '.zip':
+            filename, ext = os.path.splitext(os.path.basename(filepath))
+            data = filepath
+            if ext.lower() == '.zip':
+                with open(filepath) as csvfile:
                     zfile = zipfile.ZipFile(csvfile)
                     file_in_zip = '.'.join([filename, 'txt'])
                     data = StringIO(zfile.read(file_in_zip))
-                schema = schema_class()
+            schema = schema_class()
+
+            if self.without_pandas_mode:
                 reader = csv.DictReader(comment_stripper(data),
                                         dialect=GeoNamesDialect(),
                                         fieldnames=schema.fields.keys())
-                counter = 0
-                errors = 0
                 for row in reader:
-                    # Convert all empty strings to None
-                    clean_row = {k: v or None for k, v in row.iteritems()}
-                    row_result = schema.load(clean_row)
-                    counter += 1
-                    # TODO: Make handlers for each file type
-                    print('{0}'.format(counter), end='\r')
-                    if row_result.errors:
-                        errors += 1
-                        # print(row)
-                        # print(counter, 'ERROR', row_result.errors)
-                        print(counter,
-                              ', '.join([f for f, m in row_result.errors.iteritems()]))
-            print('Total records:', counter)
-            print('Records with errors:', errors)
+                    yield schema.load(row)
+            else:
+                # dtype = {}
+                # num_types_to_dtype = {
+                #     int: np.int32,
+                #     float: np.float64,
+                #     decimal.Decimal: np.float64,
+                # }
+                # for name in schema.fields.keys():
+                #     field_type = 'str'
+                #     field = schema.fields[name]
+                #     if hasattr(field, 'num_type'):
+                #         if field.num_type in num_types_to_dtype.keys():
+                #             field_type = num_types_to_dtype[field.num_type]
+                #     dtype[name] = field_type
+                # pprint(dtype)
+
+                options = {}
+                if self.memory_mode == 'low':
+                    options['iterator'] = True
+                    options['chunksize'] = 4096
+
+                reader = pandas.read_csv(data,
+                                         engine='c',
+                                         sep=str('\t'),
+                                         escapechar=None,
+                                         quoting=csv.QUOTE_NONE,
+                                         lineterminator=str('\n'),
+                                         header=None,
+                                         names=schema.fields.keys(),
+                                         na_values=None,
+                                         na_filter=False,
+                                         keep_default_na=False,
+                                         # dtype=dtype)
+                                         dtype='str',
+                                         **options)
+                # Low memory usage mode
+                # ./manage.py smartgeonames --memory-mode low  265,09s user 1,11s system 99% cpu 4:27,65 total
+                if self.memory_mode == 'low':
+                    for records in reader:
+                        for row in records.itertuples():
+                            yield schema.load(row._asdict())
+                # Normal memory usage mode
+                # ./manage.py smartgeonames --memory-mode normal  256,56s user 1,08s system 99% cpu 4:18,95 total
+                elif self.memory_mode == 'normal':
+                    for row in reader.itertuples():
+                        yield schema.load(row._asdict())
+                # Maximum memory usage mode
+                # ./manage.py smartgeonames --memory-mode max  230,07s user 1,90s system 99% cpu 3:53,09 total
+                else:
+                    for row in reader.to_dict(orient='records'):
+                        yield schema.load(row)
