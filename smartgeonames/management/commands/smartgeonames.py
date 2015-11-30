@@ -328,3 +328,5 @@ class Command(BaseCommand):
                 else:
                     for row in reader.to_dict(orient='records'):
                         yield schema.load(row)
+        else:
+            logger.error('File %s is not exists.', filepath)
