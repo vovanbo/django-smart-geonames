@@ -201,7 +201,7 @@ class Command(BaseCommand):
 
         with open(local, 'wb') as f:
             start = time.clock()
-            for chunk in r.iter_content(chunk_size=4096):
+            for chunk in r.iter_content(chunk_size=1024):
                 if chunk:
                     downloaded += len(chunk)
                     f.write(chunk)
@@ -296,7 +296,7 @@ class Command(BaseCommand):
                 options = {}
                 if self.memory_mode == 'low':
                     options['iterator'] = True
-                    options['chunksize'] = 4096
+                    options['chunksize'] = 1024
 
                 reader = pandas.read_csv(data,
                                          engine='c',
