@@ -138,6 +138,7 @@ class Command(BaseCommand):
             data = self.parse(POSTAL_CODES_FILE_LOCAL_PATH, PostalCodeSchema)
             counter = 0
             errors = 0
+            # TODO: Multiprocessing
             for row in data:
                 counter += 1
                 if row.errors:
