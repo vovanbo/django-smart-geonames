@@ -154,36 +154,48 @@ class Command(BaseCommand):
         if options.get('import'):
             logger.info('IMPORT (memory mode: %s, use Pandas: %s)',
                         self.memory_mode, not self.without_pandas_mode)
-            parsers = (
-                self.parse(COUNTRIES_FILE_LOCAL_PATH, CountryInfoSchema,
-                           pre_processors=(remove_comments,)),
-                self.parse(OBJECTS_FILE_LOCAL_PATH, GeoNameSchema,
-                           process_filter=objects_filter),
-                self.parse(TRANSLATIONS_FILE_LOCAL_PATH, AlternateNameSchema),
-                self.parse(POSTAL_CODES_FILE_LOCAL_PATH, PostalCodeSchema),
+            import_setup = (
+                (COUNTRIES_FILE_LOCAL_PATH, {
+                    'schema': CountryInfoSchema(),
+                    'pre_processors': (remove_comments,)
+                }),
+                (OBJECTS_FILE_LOCAL_PATH, {
+                    'schema': GeoNameSchema(),
+                    'data_filter': objects_filter,
+                }),
+                (TRANSLATIONS_FILE_LOCAL_PATH, {
+                    'schema': AlternateNameSchema(),
+                }),
+                (POSTAL_CODES_FILE_LOCAL_PATH, {
+                    'schema': PostalCodeSchema(),
+                })
             )
-            for data in parsers:
+            for (filepath, setup) in import_setup:
                 counter = 0
                 errors = 0
                 # TODO: Multiprocessing
-                for row in data:
+                schema = setup.pop('schema')
+                logger.info('Importing file %s', filepath)
+                for data in self.parse(filepath, fields=schema.fields.keys(),
+                                       **setup):
                     counter += 1
                     print('{0}'.format(counter), end='\r')
-                    if row.errors:
+                    result = schema.load(data)
+                    if result.errors:
                         errors += 1
                         print(counter)
                     # TODO: Make handlers for each file type
-                    self.dummy_handler(row)
+                    self.dummy_handler(result)
                 print('Total records:', counter)
                 print('Records with errors:', errors)
 
-    def dummy_handler(self, row):
-        if row.errors:
-            # print(row)
+    def dummy_handler(self, data):
+        if data.errors:
+            # print(data)
             # print(counter, 'ERROR', row_result.errors)
             # print(counter, ', '.join(
-            #     [f for f, m in row.errors.iteritems()]))
-            print(row)
+            #     [f for f, m in data.errors.iteritems()]))
+            print(data)
 
     def mkdir(self, path):
         path, _ = os.path.split(path)  # get only path to file
@@ -287,27 +299,25 @@ class Command(BaseCommand):
                 is_updated = True
         return is_updated
 
-    def parse(self, filepath, schema_class,
-              process_filter=None, pre_processors=()):
+    def parse(self, filepath, fields, data_filter=None, pre_processors=()):
         if os.path.exists(filepath):
             if pre_processors:
-                for processor in pre_processors:
-                    processor(filepath)
+                for process in pre_processors:
+                    process(filepath)
             filename, ext = os.path.splitext(os.path.basename(filepath))
             data = filepath
             if ext.lower() == '.zip':
-                with open(filepath) as csvfile:
-                    zfile = zipfile.ZipFile(csvfile)
+                with open(filepath) as csv_archive:
+                    zfile = zipfile.ZipFile(csv_archive)
                     file_in_zip = '.'.join([filename, 'txt'])
                     data = StringIO(zfile.read(file_in_zip))
-            schema = schema_class()
 
             if self.without_pandas_mode:
                 reader = csv.DictReader(data,
                                         dialect=GeoNamesDialect(),
-                                        fieldnames=schema.fields.keys())
+                                        fieldnames=fields)
                 for row in reader:
-                    yield schema.load(row)
+                    yield row
             else:
                 # dtype = {}
                 # num_types_to_dtype = {
@@ -336,7 +346,7 @@ class Command(BaseCommand):
                                          quoting=csv.QUOTE_NONE,
                                          lineterminator=str('\n'),
                                          header=None,
-                                         names=schema.fields.keys(),
+                                         names=fields,
                                          na_values=None,
                                          na_filter=False,
                                          keep_default_na=False,
@@ -349,19 +359,19 @@ class Command(BaseCommand):
                     for records in reader:
                         for row in records.itertuples():
                             data = row._asdict()
-                            if process_filter:
-                                if not process_filter(data):
+                            if data_filter:
+                                if not data_filter(data):
                                     continue
-                            yield schema.load(data)
+                            yield data
                 # Normal memory usage mode
                 # ./manage.py smartgeonames --memory-mode normal  256,56s user 1,08s system 99% cpu 4:18,95 total
                 elif self.memory_mode == 'normal':
                     for row in reader.itertuples():
-                        yield schema.load(row._asdict())
+                        yield row._asdict()
                 # Maximum memory usage mode
                 # ./manage.py smartgeonames --memory-mode max  230,07s user 1,90s system 99% cpu 3:53,09 total
                 else:
                     for row in reader.to_dict(orient='records'):
-                        yield schema.load(row)
+                        yield row
         else:
             logger.error('File %s is not exists.', filepath)
