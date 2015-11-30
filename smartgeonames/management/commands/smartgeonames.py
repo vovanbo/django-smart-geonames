@@ -113,13 +113,13 @@ class Command(BaseCommand):
         parser.add_argument(
             '--memory-mode', dest='memory_mode',
             choices=['low', 'normal', 'max'],
-            default='normal',
-            help='Memory mode (default: normal)'
+            default='low',
+            help='Memory mode (default: low)'
         )
         parser.add_argument(
             '--without-pandas', action='store_true', dest='without_pandas_mode',
             default=False,
-            help='Don\'t use Pandas package for CSV parsing (default: false)'
+            help='Don\'t use Pandas for CSV parsing (default: false)'
         )
 
     def handle(self, *args, **options):
