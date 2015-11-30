@@ -4,6 +4,7 @@ from __future__ import absolute_import, unicode_literals, print_function
 import logging
 import os
 import shutil
+import tempfile
 import zipfile
 import errno
 
@@ -57,6 +58,26 @@ def comment_stripper(iterator):
         yield line
 
 
+def remove_comments(filepath):
+    tmp = tempfile.NamedTemporaryFile(mode='wb', delete=True)
+    source = open(filepath, 'rb')
+    try:
+        for line in comment_stripper(source):
+            tmp.write(line)
+            tmp.flush()
+    finally:
+        source.close()
+        shutil.copy2(tmp.name, filepath)
+        tmp.close()
+
+
+def objects_filter(data):
+    result = []
+    for filter_key, filter_values in OBJECTS_FILTER.iteritems():
+        result.append(data[filter_key] in filter_values)
+    return all(result)
+
+
 class Command(BaseCommand):
     help = 'Smart GeoNames manager'
     progress_width = 50
@@ -102,6 +123,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        self.memory_mode = options.get('memory_mode')
+        self.without_pandas_mode = options.get('without_pandas_mode')
+
         if options.get('clean_up'):
             logger.info('CLEAN-UP')
             try:
@@ -128,35 +152,38 @@ class Command(BaseCommand):
             self.download(POSTAL_CODES_FILE_PATH, POSTAL_CODES_FILE_LOCAL_PATH)
 
         if options.get('import'):
-            self.memory_mode = options.get('memory_mode')
-            self.without_pandas_mode = options.get('without_pandas_mode')
             logger.info('IMPORT (memory mode: %s, use Pandas: %s)',
                         self.memory_mode, not self.without_pandas_mode)
-            # self.parse(COUNTRIES_FILE_LOCAL_PATH, CountryInfoSchema)
-            # self.parse(OBJECTS_FILE_LOCAL_PATH, GeoNameSchema)
-            # self.parse(TRANSLATIONS_FILE_LOCAL_PATH, AlternateNameSchema)
-            data = self.parse(POSTAL_CODES_FILE_LOCAL_PATH, PostalCodeSchema)
-            counter = 0
-            errors = 0
-            # TODO: Multiprocessing
-            for row in data:
-                counter += 1
-                if row.errors:
-                    errors += 1
-                    print(counter)
-                # TODO: Make handlers for each file type
-                self.postal_code_handler(row)
-            print('Total records:', counter)
-            print('Records with errors:', errors)
+            parsers = (
+                self.parse(COUNTRIES_FILE_LOCAL_PATH, CountryInfoSchema,
+                           pre_processors=(remove_comments,)),
+                self.parse(OBJECTS_FILE_LOCAL_PATH, GeoNameSchema,
+                           process_filter=objects_filter),
+                self.parse(TRANSLATIONS_FILE_LOCAL_PATH, AlternateNameSchema),
+                self.parse(POSTAL_CODES_FILE_LOCAL_PATH, PostalCodeSchema),
+            )
+            for data in parsers:
+                counter = 0
+                errors = 0
+                # TODO: Multiprocessing
+                for row in data:
+                    counter += 1
+                    print('{0}'.format(counter), end='\r')
+                    if row.errors:
+                        errors += 1
+                        print(counter)
+                    # TODO: Make handlers for each file type
+                    self.dummy_handler(row)
+                print('Total records:', counter)
+                print('Records with errors:', errors)
 
-    def postal_code_handler(self, postal_code):
-        # print('{0}'.format(counter), end='\r')
-        if postal_code.errors:
+    def dummy_handler(self, row):
+        if row.errors:
             # print(row)
             # print(counter, 'ERROR', row_result.errors)
             # print(counter, ', '.join(
             #     [f for f, m in row.errors.iteritems()]))
-            print(postal_code)
+            print(row)
 
     def mkdir(self, path):
         path, _ = os.path.split(path)  # get only path to file
@@ -260,8 +287,12 @@ class Command(BaseCommand):
                 is_updated = True
         return is_updated
 
-    def parse(self, filepath, schema_class):
+    def parse(self, filepath, schema_class,
+              process_filter=None, pre_processors=()):
         if os.path.exists(filepath):
+            if pre_processors:
+                for processor in pre_processors:
+                    processor(filepath)
             filename, ext = os.path.splitext(os.path.basename(filepath))
             data = filepath
             if ext.lower() == '.zip':
@@ -272,7 +303,7 @@ class Command(BaseCommand):
             schema = schema_class()
 
             if self.without_pandas_mode:
-                reader = csv.DictReader(comment_stripper(data),
+                reader = csv.DictReader(data,
                                         dialect=GeoNamesDialect(),
                                         fieldnames=schema.fields.keys())
                 for row in reader:
@@ -317,7 +348,11 @@ class Command(BaseCommand):
                 if self.memory_mode == 'low':
                     for records in reader:
                         for row in records.itertuples():
-                            yield schema.load(row._asdict())
+                            data = row._asdict()
+                            if process_filter:
+                                if not process_filter(data):
+                                    continue
+                            yield schema.load(data)
                 # Normal memory usage mode
                 # ./manage.py smartgeonames --memory-mode normal  256,56s user 1,08s system 99% cpu 4:18,95 total
                 elif self.memory_mode == 'normal':
