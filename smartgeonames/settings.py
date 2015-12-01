@@ -130,3 +130,12 @@ POSTAL_CODES_FILTER = getattr(
                          'UA',)
     }
 )
+
+HIERARCHY_FILE_PATH = getattr(
+    settings, 'SMART_GEONAMES_HIERARCHY_FILE_PATH',
+    purl.URL(GEONAMES_URL).path('/export/dump/hierarchy.zip').as_string()
+)
+HIERARCHY_FILE_LOCAL_PATH = getattr(
+    settings, 'SMART_GEONAMES_HIERARCHY_FILE_LOCAL_PATH',
+    os.path.join(DATA_DIR, 'dump', 'hierarchy.zip')
+)
