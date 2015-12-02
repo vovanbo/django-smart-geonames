@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, unicode_literals, print_function
 
+import csv
+import errno
 import logging
 import os
 import shutil
-import tempfile
+import time
 import zipfile
-import errno
 
 import pandas
 import requests
-import time
-import csv
-from six import StringIO
 from django.core.management import BaseCommand
-from treelib import Tree, Node
+from six import StringIO
+from treelib import Tree
+
 from smartgeonames import settings
+from smartgeonames.filters import remove_comments, objects_filter
+from smartgeonames.handlers import dummy_handler, hierarchy_builder_handler
 
 DATA_DIR = settings.DATA_DIR
 
@@ -42,7 +44,7 @@ PostalCodeSchema = settings.POSTAL_CODES_SCHEMA
 
 HIERARCHY_FILE_PATH = settings.HIERARCHY_FILE_PATH
 HIERARCHY_FILE_LOCAL_PATH = settings.HIERARCHY_FILE_LOCAL_PATH
-HIERARCHY_TREE_ROOT = 0
+HIERARCHY_TREE_ROOT = settings.HIERARCHY_TREE_ROOT
 
 logger = logging.getLogger("smartgeonames")
 
@@ -53,69 +55,6 @@ class GeoNamesDialect(csv.Dialect):
     strict = True
     quoting = csv.QUOTE_NONE
     lineterminator = str('\r\n')
-
-
-def comment_stripper(iterator):
-    for line in iterator:
-        if line[:1] == '#':
-            continue
-        if not line.strip():
-            continue
-        yield line
-
-
-def remove_comments(filepath):
-    tmp = tempfile.NamedTemporaryFile(mode='wb', delete=True)
-    source = open(filepath, 'rb')
-    try:
-        for line in comment_stripper(source):
-            tmp.write(line)
-            tmp.flush()
-    finally:
-        source.close()
-        shutil.copy2(tmp.name, filepath)
-        tmp.close()
-
-
-def objects_filter(data):
-    result = []
-    for filter_key, filter_values in OBJECTS_FILTER.iteritems():
-        result.append(data[filter_key] in filter_values)
-    return all(result)
-
-
-def dummy_handler(schema, data):
-    result = schema.load(data)
-    if result.errors:
-        # print(result)
-        # print(counter, 'ERROR', row_result.errors)
-        # print(counter, ', '.join(
-        #     [f for f, m in result.errors.iteritems()]))
-        print(result)
-    return result, result.errors
-
-
-def hierarchy_builder(schema, data, tree):
-    parent = int(data['parent'])
-    child = int(data['child'])
-
-    def desc(x):
-        return {'desc': x}
-
-    if parent not in OBJECTS_IGNORE and child not in OBJECTS_IGNORE:
-        try:
-            if not tree.contains(parent):
-                tree.create_node(parent, parent, HIERARCHY_TREE_ROOT,
-                                 data=desc(parent))
-            if child != 0 and not tree.contains(child):
-                tree.create_node(child, child, parent,
-                                 data=desc(child))
-        except:
-            print(parent, child)
-            raise
-    else:
-        print(parent, child)
-    return tree, {}
 
 
 class Command(BaseCommand):
@@ -200,7 +139,7 @@ class Command(BaseCommand):
             logger.info('IMPORT (memory mode: %s, use Pandas: %s)',
                         self.memory_mode, not self.without_pandas_mode)
             import_setup = (
-                (HIERARCHY_FILE_LOCAL_PATH, hierarchy_builder, {
+                (HIERARCHY_FILE_LOCAL_PATH, hierarchy_builder_handler, {
                     'parsing': {
                         'fields': ('parent', 'child', 'type'),
                     },

@@ -140,3 +140,4 @@ HIERARCHY_FILE_LOCAL_PATH = getattr(
     settings, 'SMART_GEONAMES_HIERARCHY_FILE_LOCAL_PATH',
     os.path.join(DATA_DIR, 'dump', 'hierarchy.zip')
 )
+HIERARCHY_TREE_ROOT = 0
