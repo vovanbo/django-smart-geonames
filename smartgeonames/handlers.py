@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import, unicode_literals, print_function
 from smartgeonames import settings
 
 OBJECTS_IGNORE = settings.OBJECTS_IGNORE
@@ -14,6 +15,17 @@ def dummy_handler(schema, data):
         #     [f for f, m in result.errors.iteritems()]))
         print(result)
     return result, result.errors
+
+
+def object_handler(schema, data):
+    result = schema.load(data)
+    object = result.data
+    if result.errors:
+        print(data)
+        print(result)
+    else:
+        object.full_clean()
+    return object, result.errors
 
 
 def hierarchy_builder_handler(schema, data, tree):

@@ -154,7 +154,7 @@ class Command(BaseCommand):
                         'tree': self.hierarchy
                     }
                 }),
-                (OBJECTS_FILE_LOCAL_PATH, dummy_handler, {
+                (OBJECTS_FILE_LOCAL_PATH, object_handler, {
                     'schema': GeoNameSchema(),
                     'parsing': {
                         'data_filter': objects_filter,
