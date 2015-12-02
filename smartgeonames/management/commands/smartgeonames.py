@@ -17,30 +17,37 @@ from treelib import Tree
 
 from smartgeonames import settings
 from smartgeonames.filters import remove_comments, objects_filter
-from smartgeonames.handlers import dummy_handler, hierarchy_builder_handler
+from smartgeonames.handlers import dummy_handler, hierarchy_builder_handler, \
+    object_handler
+from smartgeonames.schemas import (
+    CountryInfoSchema as DefaultCountryInfoSchema,
+    GeoNamesRecordSchema as DefaultGeoNamesRecordSchema,
+    AlternateNameSchema as DefaultAlternateNameSchema,
+    PostalCodeSchema as DefaultPostalCodeSchema
+)
 
 DATA_DIR = settings.DATA_DIR
 
 COUNTRIES_FILE_PATH = settings.COUNTRIES_FILE_PATH
 COUNTRIES_FILE_LOCAL_PATH = settings.COUNTRIES_FILE_LOCAL_PATH
 COUNTRIES_FILTER = settings.COUNTRIES_FILTER
-CountryInfoSchema = settings.COUNTRIES_SCHEMA
+CountryInfoSchema = settings.COUNTRIES_SCHEMA or DefaultCountryInfoSchema
 
 OBJECTS_FILE_PATH = settings.OBJECTS_FILE_PATH
 OBJECTS_FILE_LOCAL_PATH = settings.OBJECTS_FILE_LOCAL_PATH
 OBJECTS_FILTER = settings.OBJECTS_FILTER
 OBJECTS_IGNORE = settings.OBJECTS_IGNORE
-GeoNameSchema = settings.OBJECTS_SCHEMA
+GeoNameSchema = settings.OBJECTS_SCHEMA or DefaultGeoNamesRecordSchema
 
 TRANSLATIONS_FILE_PATH = settings.TRANSLATIONS_FILE_PATH
 TRANSLATIONS_FILE_LOCAL_PATH = settings.TRANSLATIONS_FILE_LOCAL_PATH
 TRANSLATIONS_FILTER = settings.TRANSLATIONS_FILTER
-AlternateNameSchema = settings.TRANSLATIONS_SCHEMA
+AlternateNameSchema = settings.TRANSLATIONS_SCHEMA or DefaultAlternateNameSchema
 
 POSTAL_CODES_FILE_PATH = settings.POSTAL_CODES_FILE_PATH
 POSTAL_CODES_FILE_LOCAL_PATH = settings.POSTAL_CODES_FILE_LOCAL_PATH
 POSTAL_CODES_FILTER = settings.POSTAL_CODES_FILTER
-PostalCodeSchema = settings.POSTAL_CODES_SCHEMA
+PostalCodeSchema = settings.POSTAL_CODES_SCHEMA or DefaultPostalCodeSchema
 
 HIERARCHY_FILE_PATH = settings.HIERARCHY_FILE_PATH
 HIERARCHY_FILE_LOCAL_PATH = settings.HIERARCHY_FILE_LOCAL_PATH

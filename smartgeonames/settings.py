@@ -5,11 +5,6 @@ import os
 import purl
 from django.conf import settings
 
-from .schemas import (CountryInfoSchema,
-                      GeoNameSchema,
-                      AlternateNameSchema,
-                      PostalCodeSchema)
-
 # Common
 GEONAMES_URL = getattr(
     settings, 'SMART_GEONAMES_URL',
@@ -33,9 +28,7 @@ COUNTRIES_FILE_LOCAL_PATH = getattr(
     os.path.join(DATA_DIR, 'dump', 'countryInfo.txt')
 )
 COUNTRIES_SCHEMA = getattr(
-    settings, 'SMART_GEONAMES_COUNTRIES_SCHEMA',
-    CountryInfoSchema
-)
+    settings, 'SMART_GEONAMES_COUNTRIES_SCHEMA', None)
 COUNTRIES_FILTER = getattr(
     settings, 'SMART_GEONAMES_COUNTRIES_FILTER',
     {}
@@ -51,9 +44,7 @@ OBJECTS_FILE_LOCAL_PATH = getattr(
     os.path.join(DATA_DIR, 'dump', 'allCountries.zip')
 )
 OBJECTS_SCHEMA = getattr(
-    settings, 'SMART_GEONAMES_OBJECTS_SCHEMA',
-    GeoNameSchema
-)
+    settings, 'SMART_GEONAMES_OBJECTS_SCHEMA', None)
 OBJECTS_CONTINENTS_FILTER = getattr(
     settings, 'SMART_GEONAMES_OBJECTS_CONTINENTS_FILTER',
     ('CONT',)
@@ -100,9 +91,7 @@ TRANSLATIONS_FILE_LOCAL_PATH = getattr(
     os.path.join(DATA_DIR, 'dump', 'alternateNames.zip')
 )
 TRANSLATIONS_SCHEMA = getattr(
-    settings, 'SMART_GEONAMES_TRANSLATIONS_SCHEMA',
-    AlternateNameSchema
-)
+    settings, 'SMART_GEONAMES_TRANSLATIONS_SCHEMA', None)
 TRANSLATIONS_FILTER = getattr(
     settings, 'SMART_GEONAMES_TRANSLATIONS_FILTER',
     {
@@ -121,9 +110,7 @@ POSTAL_CODES_FILE_LOCAL_PATH = getattr(
     os.path.join(DATA_DIR, 'zip', 'allCountries.zip')
 )
 POSTAL_CODES_SCHEMA = getattr(
-    settings, 'SMART_GEONAMES_POSRAL_CODES_SCHEMA',
-    PostalCodeSchema
-)
+    settings, 'SMART_GEONAMES_POSTAL_CODES_SCHEMA', None)
 POSTAL_CODES_FILTER = getattr(
     settings, 'SMART_GEONAMES_POSTAL_CODES_FILTER',
     {
