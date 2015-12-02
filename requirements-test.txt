@@ -31,4 +31,5 @@ requests==2.8.1
 six==1.10.0               # via django-extensions, mock, purl, python-dateutil
 tox==2.2.1
 treelib==1.3.2
+unidecode==0.4.18
 virtualenv==13.1.2        # via tox

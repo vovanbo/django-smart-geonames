@@ -17,3 +17,4 @@ pytz==2015.7              # via pandas
 requests==2.8.1
 six==1.10.0               # via django-extensions, purl, python-dateutil
 treelib==1.3.2
+unidecode==0.4.18

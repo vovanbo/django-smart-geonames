@@ -7,3 +7,4 @@ pandas
 marshmallow
 purl
 requests
+unidecode
