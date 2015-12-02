@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, absolute_import, print_function
-from marshmallow import Schema, fields, pre_load
+
+from django.contrib.gis.geos import Point
+from marshmallow import Schema, fields, pre_load, post_load
 from marshmallow.validate import Length, Range
+from unidecode import unidecode
+
+from .models import GeoNamesRecord
 
 
 class SmartGeoNamesBaseSchema(Schema):
@@ -11,7 +16,7 @@ class SmartGeoNamesBaseSchema(Schema):
         return in_data
 
 
-class GeoNameSchema(SmartGeoNamesBaseSchema):
+class GeoNamesRecordSchema(SmartGeoNamesBaseSchema):
     """
     geonameid         : integer id of record in geonames database
     name              : name of geographical point (utf8) varchar(200)
@@ -54,8 +59,8 @@ class GeoNameSchema(SmartGeoNamesBaseSchema):
     name = fields.String(required=True, validate=Length(max=200))
     asciiname = fields.String(required=True, validate=Length(max=200))
     alternatenames = fields.String(validate=Length(max=10000), allow_none=True)
-    latitude = fields.Decimal()
-    longitude = fields.Decimal()
+    latitude = fields.Float()
+    longitude = fields.Float()
     feature_class = fields.String(required=True, validate=Length(min=1, max=1))
     feature_code = fields.String(validate=Length(max=10))
     country_code = fields.String(required=True, validate=Length(min=2, max=2))
@@ -69,6 +74,38 @@ class GeoNameSchema(SmartGeoNamesBaseSchema):
     dem = fields.Integer()
     timezone = fields.String(validate=Length(max=40), allow_none=True)
     modification_date = fields.Date()
+
+    @pre_load
+    def convert_name_to_asciiname_if_not_exists(self, in_data):
+        if not in_data['asciiname']:
+            in_data['asciiname'] = unidecode(unicode(in_data['name'], "utf-8"))
+            print(in_data['asciiname'], in_data['name'])
+        return in_data
+
+    @post_load
+    def make_object(self, data):
+        if data['latitude'] and data['longitude']:
+            location = Point(data['latitude'], data['longitude'])
+        else:
+            location = None
+        return GeoNamesRecord(
+            id=data['geonameid'],
+            name=data['name'],
+            name_ascii=data['asciiname'],
+            alt_names=data['alternatenames'],
+            feature_class=data['feature_class'],
+            feature_code=data['feature_code'],
+            admin1_code=data['admin1_code'],
+            admin2_code=data['admin2_code'],
+            admin3_code=data['admin3_code'],
+            admin4_code=data['admin4_code'],
+            population=data['population'],
+            elevation=data['elevation'],
+            dem=data['dem'],
+            timezone=data['timezone'],
+            modification_date=data['modification_date'],
+            location=location,
+        )
 
 
 class AlternateNameSchema(SmartGeoNamesBaseSchema):
