@@ -88,6 +88,7 @@ OBJECTS_FILTER = getattr(
                          'UA',),
     }
 )
+OBJECTS_IGNORE = (1,)
 
 # Alternate Names (translations etc.)
 TRANSLATIONS_FILE_PATH = getattr(

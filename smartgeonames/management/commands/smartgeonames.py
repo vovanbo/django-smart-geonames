@@ -14,6 +14,7 @@ import time
 import csv
 from six import StringIO
 from django.core.management import BaseCommand
+from treelib import Tree, Node
 from smartgeonames import settings
 
 DATA_DIR = settings.DATA_DIR
@@ -26,6 +27,7 @@ CountryInfoSchema = settings.COUNTRIES_SCHEMA
 OBJECTS_FILE_PATH = settings.OBJECTS_FILE_PATH
 OBJECTS_FILE_LOCAL_PATH = settings.OBJECTS_FILE_LOCAL_PATH
 OBJECTS_FILTER = settings.OBJECTS_FILTER
+OBJECTS_IGNORE = settings.OBJECTS_IGNORE
 GeoNameSchema = settings.OBJECTS_SCHEMA
 
 TRANSLATIONS_FILE_PATH = settings.TRANSLATIONS_FILE_PATH
@@ -37,6 +39,10 @@ POSTAL_CODES_FILE_PATH = settings.POSTAL_CODES_FILE_PATH
 POSTAL_CODES_FILE_LOCAL_PATH = settings.POSTAL_CODES_FILE_LOCAL_PATH
 POSTAL_CODES_FILTER = settings.POSTAL_CODES_FILTER
 PostalCodeSchema = settings.POSTAL_CODES_SCHEMA
+
+HIERARCHY_FILE_PATH = settings.HIERARCHY_FILE_PATH
+HIERARCHY_FILE_LOCAL_PATH = settings.HIERARCHY_FILE_LOCAL_PATH
+HIERARCHY_TREE_ROOT = 0
 
 logger = logging.getLogger("smartgeonames")
 
@@ -78,6 +84,40 @@ def objects_filter(data):
     return all(result)
 
 
+def dummy_handler(schema, data):
+    result = schema.load(data)
+    if result.errors:
+        # print(result)
+        # print(counter, 'ERROR', row_result.errors)
+        # print(counter, ', '.join(
+        #     [f for f, m in result.errors.iteritems()]))
+        print(result)
+    return result, result.errors
+
+
+def hierarchy_builder(schema, data, tree):
+    parent = int(data['parent'])
+    child = int(data['child'])
+
+    def desc(x):
+        return {'desc': x}
+
+    if parent not in OBJECTS_IGNORE and child not in OBJECTS_IGNORE:
+        try:
+            if not tree.contains(parent):
+                tree.create_node(parent, parent, HIERARCHY_TREE_ROOT,
+                                 data=desc(parent))
+            if child != 0 and not tree.contains(child):
+                tree.create_node(child, child, parent,
+                                 data=desc(child))
+        except:
+            print(parent, child)
+            raise
+    else:
+        print(parent, child)
+    return tree, {}
+
+
 class Command(BaseCommand):
     help = 'Smart GeoNames manager'
     progress_width = 50
@@ -92,6 +132,8 @@ class Command(BaseCommand):
     ]
     memory_mode = None
     without_pandas_mode = None
+    hierarchy = Tree()
+    hierarchy_file = os.path.join(DATA_DIR, 'hierarchy_tree.txt')
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -125,6 +167,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.memory_mode = options.get('memory_mode')
         self.without_pandas_mode = options.get('without_pandas_mode')
+        if not self.hierarchy.contains(HIERARCHY_TREE_ROOT):
+            self.hierarchy.create_node(HIERARCHY_TREE_ROOT, HIERARCHY_TREE_ROOT)
 
         if options.get('clean_up'):
             logger.info('CLEAN-UP')
@@ -146,56 +190,70 @@ class Command(BaseCommand):
 
         if options.get('download'):
             logger.info('DOWNLOAD')
-            self.download(COUNTRIES_FILE_PATH, COUNTRIES_FILE_LOCAL_PATH)
+            self.download(HIERARCHY_FILE_PATH, HIERARCHY_FILE_LOCAL_PATH)
             self.download(OBJECTS_FILE_PATH, OBJECTS_FILE_LOCAL_PATH)
             self.download(TRANSLATIONS_FILE_PATH, TRANSLATIONS_FILE_LOCAL_PATH)
+            self.download(COUNTRIES_FILE_PATH, COUNTRIES_FILE_LOCAL_PATH)
             self.download(POSTAL_CODES_FILE_PATH, POSTAL_CODES_FILE_LOCAL_PATH)
 
         if options.get('import'):
             logger.info('IMPORT (memory mode: %s, use Pandas: %s)',
                         self.memory_mode, not self.without_pandas_mode)
             import_setup = (
-                (COUNTRIES_FILE_LOCAL_PATH, {
-                    'schema': CountryInfoSchema(),
-                    'pre_processors': (remove_comments,)
+                (HIERARCHY_FILE_LOCAL_PATH, hierarchy_builder, {
+                    'parsing': {
+                        'fields': ('parent', 'child', 'type'),
+                    },
+                    'handler': {
+                        'tree': self.hierarchy
+                    }
                 }),
-                (OBJECTS_FILE_LOCAL_PATH, {
+                (OBJECTS_FILE_LOCAL_PATH, dummy_handler, {
                     'schema': GeoNameSchema(),
-                    'data_filter': objects_filter,
+                    'parsing': {
+                        'data_filter': objects_filter,
+                    },
                 }),
-                (TRANSLATIONS_FILE_LOCAL_PATH, {
+                (TRANSLATIONS_FILE_LOCAL_PATH, dummy_handler, {
                     'schema': AlternateNameSchema(),
                 }),
-                (POSTAL_CODES_FILE_LOCAL_PATH, {
+                (COUNTRIES_FILE_LOCAL_PATH, dummy_handler, {
+                    'schema': CountryInfoSchema(),
+                    'parsing': {
+                        'pre_processors': (remove_comments,)
+                    },
+                }),
+                (POSTAL_CODES_FILE_LOCAL_PATH, dummy_handler, {
                     'schema': PostalCodeSchema(),
-                })
+                }),
             )
-            for (filepath, setup) in import_setup:
-                counter = 0
-                errors = 0
+            for (filepath, handler, kwargs) in import_setup:
                 # TODO: Multiprocessing
-                schema = setup.pop('schema')
+                schema = kwargs.pop('schema', None)
+                handler_kwargs = kwargs.get('handler', {})
+                parsing_kwargs = kwargs.get('parsing', {})
+                schema_fields = schema.fields.keys() if schema else ()
+                parsing_kwargs['fields'] = parsing_kwargs.get('fields',
+                                                              schema_fields)
                 logger.info('Importing file %s', filepath)
-                for data in self.parse(filepath, fields=schema.fields.keys(),
-                                       **setup):
+                counter = 0
+                errors_counter = 0
+                for data in self.parse(filepath, **parsing_kwargs):
                     counter += 1
                     print('{0}'.format(counter), end='\r')
-                    result = schema.load(data)
-                    if result.errors:
-                        errors += 1
+                    result, errors = handler(schema, data, **handler_kwargs)
+                    if errors:
+                        errors_counter += 1
                         print(counter)
-                    # TODO: Make handlers for each file type
-                    self.dummy_handler(result)
                 print('Total records:', counter)
-                print('Records with errors:', errors)
-
-    def dummy_handler(self, data):
-        if data.errors:
-            # print(data)
-            # print(counter, 'ERROR', row_result.errors)
-            # print(counter, ', '.join(
-            #     [f for f, m in data.errors.iteritems()]))
-            print(data)
+                print('Records with errors:', errors_counter)
+            # os.remove(self.hierarchy_file)
+            # self.hierarchy.subtree(HIERARCHY_TREE_ROOT).save2file(
+            #     self.hierarchy_file
+            # )
+            # print(self.hierarchy.subtree(HIERARCHY_TREE_ROOT).to_dict(sort=False))
+            print('Hierarchy tree size:', self.hierarchy.size())
+            print('Hierarchy tree depth:', self.hierarchy.depth())
 
     def mkdir(self, path):
         path, _ = os.path.split(path)  # get only path to file
