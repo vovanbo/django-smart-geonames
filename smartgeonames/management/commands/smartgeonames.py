@@ -183,16 +183,31 @@ class Command(BaseCommand):
                                                               schema_fields)
                 logger.info('Importing file %s', filepath)
                 counter = 0
+                ignored_counter = 0
                 errors_counter = 0
-                for data in self.parse(filepath, **parsing_kwargs):
+                imported_counter = 0
+                counter_msg = 'Records: {0}, ' \
+                              'ignored: {1}, ' \
+                              'errors: {2}, ' \
+                              'imported: {3}'
+                for data, is_ignored in self.parse(filepath, **parsing_kwargs):
+                    print(counter_msg.format(counter,
+                                             ignored_counter,
+                                             errors_counter,
+                                             imported_counter),
+                          end='\r')
                     counter += 1
-                    print('{0}'.format(counter), end='\r')
+                    if is_ignored:
+                        ignored_counter += 1
+                        continue
                     result, errors = handler(schema, data, **handler_kwargs)
                     if errors:
                         errors_counter += 1
                         print(counter)
-                print('Total records:', counter)
-                print('Records with errors:', errors_counter)
+                    else:
+                        imported_counter += 1
+                print('Total records parsed:', counter)
+                print('Total records parsed with errors:', errors_counter)
             # os.remove(self.hierarchy_file)
             # self.hierarchy.subtree(HIERARCHY_TREE_ROOT).save2file(
             #     self.hierarchy_file
@@ -362,11 +377,12 @@ class Command(BaseCommand):
                 if self.memory_mode == 'low':
                     for records in reader:
                         for row in records.itertuples():
+                            is_ignored = False
                             data = row._asdict()
                             if data_filter:
                                 if not data_filter(data):
-                                    continue
-                            yield data
+                                    is_ignored = True
+                            yield data, is_ignored
                 # Normal memory usage mode
                 # ./manage.py smartgeonames --memory-mode normal  256,56s user 1,08s system 99% cpu 4:18,95 total
                 elif self.memory_mode == 'normal':
