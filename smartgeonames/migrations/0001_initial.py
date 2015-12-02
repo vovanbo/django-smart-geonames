@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                 ('numchild', models.PositiveIntegerField(default=0)),
                 ('id', models.IntegerField(serialize=False, verbose_name='GeoNames ID', primary_key=True)),
                 ('name_ascii', models.CharField(max_length=255, verbose_name='Name in ASCII')),
-                ('alt_names', models.TextField(max_length=10000, verbose_name='Alternate names')),
+                ('alt_names', models.TextField(max_length=10000, null=True, verbose_name='Alternate names', blank=True)),
                 ('feature_class', models.CharField(max_length=1, verbose_name='Feature class')),
                 ('feature_code', models.CharField(max_length=10, verbose_name='Feature code', db_index=True)),
                 ('admin1_code', models.CharField(max_length=20, verbose_name='Code for the first administrative division', blank=True)),
