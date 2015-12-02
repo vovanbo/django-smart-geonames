@@ -2,7 +2,9 @@
 import shutil
 import tempfile
 
-from smartgeonames.management.commands.smartgeonames import OBJECTS_FILTER
+from smartgeonames import settings
+
+OBJECTS_FILTER = settings.OBJECTS_FILTER
 
 
 def comment_stripper(iterator):
