@@ -180,3 +180,55 @@ class PostalCodeSchema(SmartGeoNamesBaseSchema):
 
     class Meta:
         ordered = True
+
+
+class Admin1CodesSchema(SmartGeoNamesBaseSchema):
+    """
+    ASCII names of admin divisions.
+    http://download.geonames.org/export/dump/admin1CodesASCII.txt
+
+    concatenated code   : country_code<dot>admin1_code
+    name                : name of geographical point (utf8) varchar(200)
+    asciiname           : name of geographical point
+                          in plain ascii characters, varchar(200)
+    geonameId           : integer id of record in geonames database
+    """
+    concatenated_code = fields.String(required=True)
+    name = fields.String(required=True, validate=Length(max=200))
+    asciiname = fields.String(required=True, validate=Length(max=200))
+    geonameid = fields.Integer(required=True)
+
+    class Meta:
+        ordered = True
+
+    @post_load
+    def divide_concatenated_code(self, data):
+        data['country_code'], data['admin1_code'] = \
+            data['concatenated_code'].split('.')
+        return data
+
+
+class Admin2CodesSchema(SmartGeoNamesBaseSchema):
+    """
+    Names for administrative subdivision 'admin2 code'
+    http://download.geonames.org/export/dump/admin2Codes.txt
+
+    concatenated code   : country_code<dot>admin1_code<dot>admin2_code
+    name                : name of geographical point (utf8) varchar(200)
+    asciiname           : name of geographical point
+                          in plain ascii characters, varchar(200)
+    geonameId           : integer id of record in geonames database
+    """
+    concatenated_code = fields.String(required=True)
+    name = fields.String(required=True, validate=Length(max=200))
+    asciiname = fields.String(required=True, validate=Length(max=200))
+    geonameid = fields.Integer(required=True)
+
+    class Meta:
+        ordered = True
+
+    @post_load
+    def divide_concatenated_code(self, data):
+        data['country_code'], data['admin1_code'], data['admin2_code'] = \
+            data['concatenated_code'].split('.')
+        return data
