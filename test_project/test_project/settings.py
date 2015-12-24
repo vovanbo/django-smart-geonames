@@ -94,7 +94,7 @@ LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
 
-USE_I18N = True
+USE_I18N = False
 
 USE_L10N = True
 
@@ -180,8 +180,8 @@ LOGGING = create_logging_dict()
 
 SMART_GEONAMES_DATA_DIR = \
     '/Users/bo/Work/webdev/django-smart-geonames/data/downloads/'
-# SMART_GEONAMES_URL = 'http://download.geonames.org'
-# SMART_GEONAMES_OBJECTS_FILE_PATH = \
-#     purl.URL(SMART_GEONAMES_URL).path('/export/dump/CS.zip').as_string()
-# SMART_GEONAMES_TRANSLATIONS_FILE_PATH = \
-#     purl.URL(SMART_GEONAMES_URL).path('/export/dump/MD.zip').as_string()
+SMART_GEONAMES_URL = 'http://download.geonames.org'
+SMART_GEONAMES_OBJECTS_FILE_PATH = \
+    purl.URL(SMART_GEONAMES_URL).path('/export/dump/RU.zip').as_string()
+SMART_GEONAMES_OBJECTS_FILE_LOCAL_PATH = \
+    os.path.join(SMART_GEONAMES_DATA_DIR, 'dump', 'RU.zip')
