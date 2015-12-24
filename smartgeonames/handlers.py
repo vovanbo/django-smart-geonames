@@ -31,18 +31,19 @@ def object_handler(schema, data, tree):
 def hierarchy_builder_handler(schema, data, tree):
     parent = int(data['parent'])
     child = int(data['child'])
-
-    def desc(x):
-        return {'desc': x}
+    default_data = {
+        'created': False,
+        'children_to_create': [],
+        'object': {},
+    }
 
     if parent not in OBJECTS_IGNORE and child not in OBJECTS_IGNORE:
         try:
             if not tree.contains(parent):
                 tree.create_node(parent, parent, HIERARCHY_TREE_ROOT,
-                                 data=desc(parent))
+                                 data=default_data)
             if child != 0 and not tree.contains(child):
-                tree.create_node(child, child, parent,
-                                 data=desc(child))
+                tree.create_node(child, child, parent, data=default_data)
         except:
             print(parent, child)
             raise
