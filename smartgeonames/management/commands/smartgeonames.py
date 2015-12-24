@@ -257,6 +257,7 @@ class Command(BaseCommand):
                     'Size: %s bytes\n',
                     remote, total_length)
 
+        # TODO: Use https://github.com/tqdm/tqdm
         with open(local, 'wb') as f:
             start = time.clock()
             for chunk in r.iter_content(chunk_size=1024):
