@@ -83,29 +83,11 @@ class GeoNamesRecordSchema(SmartGeoNamesBaseSchema):
         return in_data
 
     @post_load
-    def make_object(self, data):
+    def setup_location_point(self, data):
+        data['location'] = None
         if data['latitude'] and data['longitude']:
-            location = Point(data['latitude'], data['longitude'])
-        else:
-            location = None
-        return GeoNamesRecord(
-            id=data['geonameid'],
-            name=data['name'],
-            name_ascii=data['asciiname'],
-            alt_names=data['alternatenames'],
-            feature_class=data['feature_class'],
-            feature_code=data['feature_code'],
-            admin1_code=data['admin1_code'],
-            admin2_code=data['admin2_code'],
-            admin3_code=data['admin3_code'],
-            admin4_code=data['admin4_code'],
-            population=data['population'],
-            elevation=data['elevation'],
-            dem=data['dem'],
-            timezone=data['timezone'],
-            modification_date=data['modification_date'],
-            location=location,
-        )
+            data['location'] = Point(data['latitude'], data['longitude'])
+        return data
 
 
 class AlternateNameSchema(SmartGeoNamesBaseSchema):

@@ -23,13 +23,13 @@ CONTINENT_CHOICES = (
 
 
 class GeoNamesRecord(TimeStampedModel, TranslatableModel, MP_Node):
-    id = models.IntegerField(_('GeoNames ID'), primary_key=True)
+    geonameid = models.IntegerField(_('GeoNames ID'), primary_key=True)
     translations = TranslatedFields(
-        name=models.CharField(_('Name'), max_length=255),
+            name=models.CharField(_('Name'), max_length=255),
     )
-    name_ascii = models.CharField(_('Name in ASCII'), max_length=255)
-    alt_names = models.TextField(_('Alternate names'), max_length=10000,
-                                 blank=True, null=True)
+    asciiname = models.CharField(_('Name in ASCII'), max_length=255)
+    alternatenames = models.TextField(_('Alternate names'), max_length=10000,
+                                      blank=True, null=True)
     feature_class = models.CharField(_('Feature class'), max_length=1)
     feature_code = models.CharField(_('Feature code'), max_length=10,
                                     db_index=True)
@@ -38,17 +38,17 @@ class GeoNamesRecord(TimeStampedModel, TranslatableModel, MP_Node):
                                      related_name='geo_names',
                                      blank=True, null=True)
     admin1_code = models.CharField(
-        _('Code for the first administrative division'), max_length=20,
-        blank=True)
+            _('Code for the 1st administrative division'), max_length=20,
+            blank=True)
     admin2_code = models.CharField(
-        _('Code for the second administrative division'), max_length=80,
-        blank=True)
+            _('Code for the 2nd administrative division'), max_length=80,
+            blank=True)
     admin3_code = models.CharField(
-        _('Code for the third administrative division'), max_length=20,
-        blank=True)
+            _('Code for the 3rd administrative division'), max_length=20,
+            blank=True)
     admin4_code = models.CharField(
-        _('Code for the fourth administrative division'), max_length=20,
-        blank=True)
+            _('Code for the 4th administrative division'), max_length=20,
+            blank=True)
     population = models.BigIntegerField(_('Population'), blank=True)
     elevation = models.IntegerField(_('Elevation'), blank=True)
     dem = models.IntegerField(_('Digital elevation model'), blank=True)
@@ -115,10 +115,10 @@ class CountryInfo(TimeStampedModel, models.Model):
                                 related_name='capital_of',
                                 blank=True, null=True)
     area = models.DecimalField(
-        _('Area (km²)'),
-        max_digits=15,
-        decimal_places=5,
-        blank=True)
+            _('Area (km²)'),
+            max_digits=15,
+            decimal_places=5,
+            blank=True)
     population = models.BigIntegerField(_('Population'), blank=True)
     continent = models.ForeignKey('smartgeonames.Continent',
                                   verbose_name=_('Continent'),
@@ -154,20 +154,23 @@ class PostalCode(TimeStampedModel, models.Model):
     code = models.CharField(_('Postal code'), max_length=20, db_index=True)
     place_name = models.CharField(_('Place name'), max_length=180)
     admin1 = models.OneToOneField(
-        'smartgeonames.GeoNamesRecord',
-        verbose_name=_('GeoNames record for the first administrative division'),
-        related_name='admin1_postal_code',
-        blank=True, null=True)
+            'smartgeonames.GeoNamesRecord',
+            verbose_name=_(
+                'GeoNames record for the 1st administrative division'),
+            related_name='admin1_postal_code',
+            blank=True, null=True)
     admin2 = models.OneToOneField(
-        'smartgeonames.GeoNamesRecord',
-        verbose_name=_('GeoNames record for the second administrative division'),
-        related_name='admin2_postal_code',
-        blank=True, null=True)
+            'smartgeonames.GeoNamesRecord',
+            verbose_name=_(
+                'GeoNames record for the 2nd administrative division'),
+            related_name='admin2_postal_code',
+            blank=True, null=True)
     admin3 = models.OneToOneField(
-        'smartgeonames.GeoNamesRecord',
-        verbose_name=_('GeoNames record for the third administrative division'),
-        related_name='admin3_postal_code',
-        blank=True, null=True)
+            'smartgeonames.GeoNamesRecord',
+            verbose_name=_(
+                'GeoNames record for the 3rd administrative division'),
+            related_name='admin3_postal_code',
+            blank=True, null=True)
     # latitude & longitude
     location = PointField()
     accuracy = models.PositiveIntegerField()
