@@ -6,8 +6,6 @@ from marshmallow import Schema, fields, pre_load, post_load
 from marshmallow.validate import Length, Range
 from unidecode import unidecode
 
-from .models import GeoNamesRecord
-
 
 class SmartGeoNamesBaseSchema(Schema):
     @pre_load
@@ -52,9 +50,6 @@ class GeoNamesRecordSchema(SmartGeoNamesBaseSchema):
     timezone          : the timezone id (see file timeZone.txt) varchar(40)
     modification_date : date of last modification in yyyy-MM-dd format
     """
-    class Meta:
-        ordered = True
-
     geonameid = fields.Integer(required=True)
     name = fields.String(required=True, validate=Length(max=200))
     asciiname = fields.String(required=True, validate=Length(max=200))
@@ -74,6 +69,9 @@ class GeoNamesRecordSchema(SmartGeoNamesBaseSchema):
     dem = fields.Integer()
     timezone = fields.String(validate=Length(max=40), allow_none=True)
     modification_date = fields.Date()
+
+    class Meta:
+        ordered = True
 
     @pre_load
     def convert_name_to_asciiname_if_not_exists(self, in_data):
@@ -112,9 +110,6 @@ class AlternateNameSchema(SmartGeoNamesBaseSchema):
     isHistoric        : '1', if this alternate name is historic and was used
                         in the past
     """
-    class Meta:
-        ordered = True
-
     alternateNameId = fields.Integer(required=True)
     geonameid = fields.Integer(required=True)
     isolanguage = fields.String(validate=Length(max=7), allow_none=True)
@@ -124,11 +119,11 @@ class AlternateNameSchema(SmartGeoNamesBaseSchema):
     isColloquial = fields.Boolean(allow_none=True)
     isHistoric = fields.Boolean(allow_none=True)
 
-
-class CountryInfoSchema(SmartGeoNamesBaseSchema):
     class Meta:
         ordered = True
 
+
+class CountryInfoSchema(SmartGeoNamesBaseSchema):
     iso_3166_1_a2 = fields.String(required=True, validate=Length(min=2, max=2))
     iso_3166_1_a3 = fields.String(required=True, validate=Length(min=3, max=3))
     iso_3166_1_numeric = fields.String(required=True,
@@ -151,6 +146,9 @@ class CountryInfoSchema(SmartGeoNamesBaseSchema):
     neighbours = fields.String(allow_none=True)
     equivalent_fips_code = fields.String(allow_none=True)
 
+    class Meta:
+        ordered = True
+
 
 class PostalCodeSchema(SmartGeoNamesBaseSchema):
     """
@@ -167,9 +165,6 @@ class PostalCodeSchema(SmartGeoNamesBaseSchema):
     longitude         : estimated longitude (wgs84)
     accuracy          : accuracy of lat/lng from 1=estimated to 6=centroid
     """
-    class Meta:
-        ordered = True
-
     country_code = fields.String(required=True, validate=Length(min=2, max=2))
     postal_code = fields.String(required=True, validate=Length(max=20))
     place_name = fields.String(required=True, validate=Length(max=180))
@@ -183,5 +178,5 @@ class PostalCodeSchema(SmartGeoNamesBaseSchema):
     longitude = fields.Decimal()
     accuracy = fields.Integer(validate=Range(min=1, max=6), allow_none=True)
 
-    # def handle_error(self, error, data):
-    #     print(data)
+    class Meta:
+        ordered = True
