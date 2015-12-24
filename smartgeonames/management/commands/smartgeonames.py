@@ -159,6 +159,9 @@ class Command(BaseCommand):
                     'parsing': {
                         'data_filter': objects_filter,
                     },
+                    'handler': {
+                        'tree': self.hierarchy
+                    }
                 }),
                 (TRANSLATIONS_FILE_LOCAL_PATH, dummy_handler, {
                     'schema': AlternateNameSchema(),

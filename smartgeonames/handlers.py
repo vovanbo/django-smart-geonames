@@ -17,7 +17,7 @@ def dummy_handler(schema, data):
     return result, result.errors
 
 
-def object_handler(schema, data):
+def object_handler(schema, data, tree):
     result = schema.load(data)
     object = result.data
     if result.errors:
