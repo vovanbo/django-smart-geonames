@@ -7,41 +7,41 @@ from django.conf import settings
 
 # Common
 GEONAMES_URL = getattr(
-    settings, 'SMART_GEONAMES_URL',
-    'http://download.geonames.org'
+        settings, 'SMART_GEONAMES_URL',
+        'http://download.geonames.org'
 )
 
 DATA_DIR = getattr(
-    settings, 'SMART_GEONAMES_DATA_DIR',
-    os.path.normpath(os.path.join(os.path.dirname(
-        os.path.realpath(__file__)), 'data')
-    )
+        settings, 'SMART_GEONAMES_DATA_DIR',
+        os.path.normpath(os.path.join(os.path.dirname(
+                os.path.realpath(__file__)), 'data')
+        )
 )
 
 # Countries
 COUNTRIES_FILE_PATH = getattr(
-    settings, 'SMART_GEONAMES_COUNTRIES_FILE_PATH',
-    purl.URL(GEONAMES_URL).path('/export/dump/countryInfo.txt').as_string()
+        settings, 'SMART_GEONAMES_COUNTRIES_FILE_PATH',
+        purl.URL(GEONAMES_URL).path('/export/dump/countryInfo.txt').as_string()
 )
 COUNTRIES_FILE_LOCAL_PATH = getattr(
-    settings, 'SMART_GEONAMES_COUNTRIES_FILE_LOCAL_PATH',
-    os.path.join(DATA_DIR, 'dump', 'countryInfo.txt')
+        settings, 'SMART_GEONAMES_COUNTRIES_FILE_LOCAL_PATH',
+        os.path.join(DATA_DIR, 'dump', 'countryInfo.txt')
 )
 COUNTRIES_SCHEMA = getattr(
-    settings, 'SMART_GEONAMES_COUNTRIES_SCHEMA', None)
+        settings, 'SMART_GEONAMES_COUNTRIES_SCHEMA', None)
 COUNTRIES_FILTER = getattr(
-    settings, 'SMART_GEONAMES_COUNTRIES_FILTER',
-    {}
+        settings, 'SMART_GEONAMES_COUNTRIES_FILTER',
+        {}
 )
 
 # GeoName objects
 OBJECTS_FILE_PATH = getattr(
-    settings, 'SMART_GEONAMES_OBJECTS_FILE_PATH',
-    purl.URL(GEONAMES_URL).path('/export/dump/allCountries.zip').as_string()
+        settings, 'SMART_GEONAMES_OBJECTS_FILE_PATH',
+        purl.URL(GEONAMES_URL).path('/export/dump/allCountries.zip').as_string()
 )
 OBJECTS_FILE_LOCAL_PATH = getattr(
-    settings, 'SMART_GEONAMES_OBJECTS_FILE_LOCAL_PATH',
-    os.path.join(DATA_DIR, 'dump', 'allCountries.zip')
+        settings, 'SMART_GEONAMES_OBJECTS_FILE_LOCAL_PATH',
+        os.path.join(DATA_DIR, 'dump', 'allCountries.zip')
 )
 OBJECTS_SCHEMA = getattr(
     settings, 'SMART_GEONAMES_OBJECTS_SCHEMA', None)
@@ -83,15 +83,16 @@ OBJECTS_IGNORE = (1,)
 
 # Alternate Names (translations etc.)
 TRANSLATIONS_FILE_PATH = getattr(
-    settings, 'SMART_GEONAMES_TRANSLATIONS_FILE_PATH',
-    purl.URL(GEONAMES_URL).path('/export/dump/alternateNames.zip').as_string()
+        settings, 'SMART_GEONAMES_TRANSLATIONS_FILE_PATH',
+        purl.URL(GEONAMES_URL).path(
+            '/export/dump/alternateNames.zip').as_string()
 )
 TRANSLATIONS_FILE_LOCAL_PATH = getattr(
-    settings, 'SMART_GEONAMES_TRANSLATIONS_FILE_LOCAL_PATH',
-    os.path.join(DATA_DIR, 'dump', 'alternateNames.zip')
+        settings, 'SMART_GEONAMES_TRANSLATIONS_FILE_LOCAL_PATH',
+        os.path.join(DATA_DIR, 'dump', 'alternateNames.zip')
 )
 TRANSLATIONS_SCHEMA = getattr(
-    settings, 'SMART_GEONAMES_TRANSLATIONS_SCHEMA', None)
+        settings, 'SMART_GEONAMES_TRANSLATIONS_SCHEMA', None)
 TRANSLATIONS_FILTER = getattr(
     settings, 'SMART_GEONAMES_TRANSLATIONS_FILTER',
     {
@@ -102,15 +103,15 @@ TRANSLATIONS_FILTER = getattr(
 
 # Postal codes
 POSTAL_CODES_FILE_PATH = getattr(
-    settings, 'SMART_GEONAMES_POSTAL_CODES_FILE_PATH',
-    purl.URL(GEONAMES_URL).path('/export/zip/allCountries.zip').as_string()
+        settings, 'SMART_GEONAMES_POSTAL_CODES_FILE_PATH',
+        purl.URL(GEONAMES_URL).path('/export/zip/allCountries.zip').as_string()
 )
 POSTAL_CODES_FILE_LOCAL_PATH = getattr(
-    settings, 'SMART_GEONAMES_POSTAL_CODES_FILE_LOCAL_PATH',
-    os.path.join(DATA_DIR, 'zip', 'allCountries.zip')
+        settings, 'SMART_GEONAMES_POSTAL_CODES_FILE_LOCAL_PATH',
+        os.path.join(DATA_DIR, 'zip', 'allCountries.zip')
 )
 POSTAL_CODES_SCHEMA = getattr(
-    settings, 'SMART_GEONAMES_POSTAL_CODES_SCHEMA', None)
+        settings, 'SMART_GEONAMES_POSTAL_CODES_SCHEMA', None)
 POSTAL_CODES_FILTER = getattr(
     settings, 'SMART_GEONAMES_POSTAL_CODES_FILTER',
     {
@@ -120,11 +121,11 @@ POSTAL_CODES_FILTER = getattr(
 )
 
 HIERARCHY_FILE_PATH = getattr(
-    settings, 'SMART_GEONAMES_HIERARCHY_FILE_PATH',
-    purl.URL(GEONAMES_URL).path('/export/dump/hierarchy.zip').as_string()
+        settings, 'SMART_GEONAMES_HIERARCHY_FILE_PATH',
+        purl.URL(GEONAMES_URL).path('/export/dump/hierarchy.zip').as_string()
 )
 HIERARCHY_FILE_LOCAL_PATH = getattr(
-    settings, 'SMART_GEONAMES_HIERARCHY_FILE_LOCAL_PATH',
-    os.path.join(DATA_DIR, 'dump', 'hierarchy.zip')
+        settings, 'SMART_GEONAMES_HIERARCHY_FILE_LOCAL_PATH',
+        os.path.join(DATA_DIR, 'dump', 'hierarchy.zip')
 )
 HIERARCHY_TREE_ROOT = 0
