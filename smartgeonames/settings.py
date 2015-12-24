@@ -44,40 +44,36 @@ OBJECTS_FILE_LOCAL_PATH = getattr(
         os.path.join(DATA_DIR, 'dump', 'allCountries.zip')
 )
 OBJECTS_SCHEMA = getattr(
-    settings, 'SMART_GEONAMES_OBJECTS_SCHEMA', None)
-OBJECTS_CONTINENTS_FILTER = getattr(
-    settings, 'SMART_GEONAMES_OBJECTS_CONTINENTS_FILTER',
-    ('CONT',)
+        settings, 'SMART_GEONAMES_OBJECTS_SCHEMA', None)
+OBJECTS_CONTINENTS_FILTER_VALUES = getattr(
+        settings, 'SMART_GEONAMES_OBJECTS_CONTINENTS_FILTER_VALUES',
+        ('CONT',)
 )
-OBJECTS_COUNTRIES_FILTER = getattr(
-    settings, 'SMART_GEONAMES_OBJECTS_COUNTRIES_FILTER',
-    ('PCL',
-     'PCLD',
-     'PCLF',
-     'PCLI',)
+OBJECTS_COUNTRIES_FILTER_VALUES = getattr(
+        settings, 'SMART_GEONAMES_OBJECTS_COUNTRIES_FILTER_VALUES',
+        ('PCL', 'PCLD', 'PCLF', 'PCLI',)
 )
-OBJECTS_REGIONS_FILTER = getattr(
-    settings, 'SMART_GEONAMES_OBJECTS_REGIONS_FILTER',
-    ('ADM1',)
+OBJECTS_REGIONS_FILTER_VALUES = getattr(
+        settings, 'SMART_GEONAMES_OBJECTS_REGIONS_FILTER_VALUES',
+        ('ADM1',)
 )
-OBJECTS_CITIES_FILTER = getattr(
-    settings, 'SMART_GEONAMES_OBJECTS_CITIES_FILTER',
-    ('PPL',
-     'PPLA',
-     'PPLA2',
-     'PPLC',)
+OBJECTS_CITIES_FILTER_VALUES = getattr(
+        settings, 'SMART_GEONAMES_OBJECTS_CITIES_FILTER_VALUES',
+        ('PPL', 'PPLA', 'PPLA2', 'PPLC',)
+)
+OBJECTS_FILTER_VALUES = getattr(
+        settings, 'SMART_GEONAMES_OBJECTS_FILTER_VALUES',
+        OBJECTS_CONTINENTS_FILTER_VALUES +
+        OBJECTS_COUNTRIES_FILTER_VALUES +
+        OBJECTS_REGIONS_FILTER_VALUES +
+        OBJECTS_CITIES_FILTER_VALUES
 )
 OBJECTS_FILTER = getattr(
-    settings, 'SMART_GEONAMES_OBJECTS_FILTER',
-    {
-        'feature_code':
-            OBJECTS_CONTINENTS_FILTER +
-            OBJECTS_COUNTRIES_FILTER +
-            OBJECTS_REGIONS_FILTER +
-            OBJECTS_CITIES_FILTER,
-        'country_code': ('RU',
-                         'UA',),
-    }
+        settings, 'SMART_GEONAMES_OBJECTS_FILTER',
+        {
+            'feature_code': lambda x: x in OBJECTS_FILTER_VALUES,
+            'country_code': lambda x: x in ('RU', 'UA',),
+        }
 )
 OBJECTS_IGNORE = (1,)
 
@@ -94,11 +90,10 @@ TRANSLATIONS_FILE_LOCAL_PATH = getattr(
 TRANSLATIONS_SCHEMA = getattr(
         settings, 'SMART_GEONAMES_TRANSLATIONS_SCHEMA', None)
 TRANSLATIONS_FILTER = getattr(
-    settings, 'SMART_GEONAMES_TRANSLATIONS_FILTER',
-    {
-        'isolanguage': ('ru',
-                        'ua',)
-    }
+        settings, 'SMART_GEONAMES_TRANSLATIONS_FILTER',
+        {
+            'isolanguage': lambda x: x in ('ru', 'ua',),
+        }
 )
 
 # Postal codes
@@ -113,11 +108,10 @@ POSTAL_CODES_FILE_LOCAL_PATH = getattr(
 POSTAL_CODES_SCHEMA = getattr(
         settings, 'SMART_GEONAMES_POSTAL_CODES_SCHEMA', None)
 POSTAL_CODES_FILTER = getattr(
-    settings, 'SMART_GEONAMES_POSTAL_CODES_FILTER',
-    {
-        'country_code': ('RU',
-                         'UA',)
-    }
+        settings, 'SMART_GEONAMES_POSTAL_CODES_FILTER',
+        {
+            'country_code': lambda x: x in ('RU', 'UA',),
+        }
 )
 
 HIERARCHY_FILE_PATH = getattr(

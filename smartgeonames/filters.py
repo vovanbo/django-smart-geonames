@@ -31,6 +31,6 @@ def remove_comments(filepath):
 
 def objects_filter(data):
     result = []
-    for filter_key, filter_values in OBJECTS_FILTER.iteritems():
-        result.append(data[filter_key] in filter_values)
+    for filter_key, lambda_filter in OBJECTS_FILTER.iteritems():
+        result.append(lambda_filter(data[filter_key]))
     return all(result)
