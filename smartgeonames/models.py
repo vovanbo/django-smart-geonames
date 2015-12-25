@@ -30,6 +30,7 @@ class GeoNamesRecord(TimeStampedModel, TranslatableModel, MP_Node):
     asciiname = models.CharField(_('Name in ASCII'), max_length=255)
     alternatenames = models.TextField(_('Alternate names'), max_length=10000,
                                       blank=True, null=True)
+    country_code = models.CharField(_('Country code'), max_length=2)
     feature_class = models.CharField(_('Feature class'), max_length=1)
     feature_code = models.CharField(_('Feature code'), max_length=10,
                                     db_index=True)

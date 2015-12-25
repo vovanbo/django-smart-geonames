@@ -45,6 +45,7 @@ class Migration(migrations.Migration):
                 ('geonameid', models.IntegerField(serialize=False, verbose_name='GeoNames ID', primary_key=True)),
                 ('asciiname', models.CharField(max_length=255, verbose_name='Name in ASCII')),
                 ('alternatenames', models.TextField(max_length=10000, null=True, verbose_name='Alternate names', blank=True)),
+                ('country_code', models.CharField(max_length=2, verbose_name='Country code')),
                 ('feature_class', models.CharField(max_length=1, verbose_name='Feature class')),
                 ('feature_code', models.CharField(max_length=10, verbose_name='Feature code', db_index=True)),
                 ('admin1_code', models.CharField(max_length=20, verbose_name='Code for the 1st administrative division', blank=True)),
