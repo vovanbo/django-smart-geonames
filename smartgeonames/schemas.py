@@ -81,10 +81,21 @@ class GeoNamesRecordSchema(SmartGeoNamesBaseSchema):
         return in_data
 
     @post_load
+    def post_processing(self, data):
+        self.setup_location_point(data)
+        self.remove_unused_fields(data)
+        return data
+
     def setup_location_point(self, data):
         data['location'] = None
         if data['latitude'] and data['longitude']:
             data['location'] = Point(data['latitude'], data['longitude'])
+        return data
+
+    def remove_unused_fields(self, data):
+        data.pop('cc2')
+        data.pop('latitude')
+        data.pop('longitude')
         return data
 
 
