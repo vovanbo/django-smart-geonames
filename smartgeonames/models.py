@@ -43,15 +43,15 @@ class GeoNamesRecord(TimeStampedModel, TranslatableModel, MP_Node):
             blank=True)
     admin2_code = models.CharField(
             _('Code for the 2nd administrative division'), max_length=80,
-            blank=True)
+            blank=True, null=True)
     admin3_code = models.CharField(
             _('Code for the 3rd administrative division'), max_length=20,
-            blank=True)
+            blank=True, null=True)
     admin4_code = models.CharField(
             _('Code for the 4th administrative division'), max_length=20,
-            blank=True)
+            blank=True, null=True)
     population = models.BigIntegerField(_('Population'), blank=True)
-    elevation = models.IntegerField(_('Elevation'), blank=True)
+    elevation = models.IntegerField(_('Elevation'), blank=True, null=True)
     dem = models.IntegerField(_('Digital elevation model'), blank=True)
     timezone = models.CharField(_('Timezone'), max_length=40, blank=True)
     modification_date = models.DateField(_('Modification date'))
