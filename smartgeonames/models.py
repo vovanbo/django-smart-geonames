@@ -22,7 +22,7 @@ CONTINENT_CHOICES = (
 )
 
 
-class GeoNamesRecord(TimeStampedModel, TranslatableModel, MP_Node):
+class GeoNamesRecord(MP_Node, TranslatableModel, TimeStampedModel):
     geonameid = models.IntegerField(_('GeoNames ID'), primary_key=True)
     translations = TranslatedFields(
             name=models.CharField(_('Name'), max_length=255),
