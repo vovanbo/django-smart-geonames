@@ -280,6 +280,7 @@ class Command(BaseCommand):
                         end='\r'
                     )
         self.update_status(remote, local, r.headers)
+        r.close()
         print('\n')
         return local
 
