@@ -13,6 +13,8 @@ Django Smart GeoNames
 Documentation
 -------------
 
+**Please don't use it yet. Project under heavy development.**
+
 The full documentation is at https://django-smart-geonames.readthedocs.org.
 
 Quickstart
